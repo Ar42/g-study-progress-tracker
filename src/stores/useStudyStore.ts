@@ -5,6 +5,9 @@ import { SUBJECTS } from "../data/loader";
 
 interface StudyStore {
   readonly subjects: readonly Subject[];
+  readonly isFallback: boolean;
+  readonly errorMsg?: string;
+  readonly setSubjects: (subjects: readonly Subject[], isFallback: boolean, errorMsg?: string) => void;
   readonly loadSubjects: () => void;
   readonly updateLeafStatus: (subjectId: string, nodeId: string, status: ProgressStatus) => void;
 }
@@ -31,8 +34,13 @@ function updateNodeInTree(nodes: readonly StudyNode[], nodeId: string, status: P
 
 export const useStudyStore = create<StudyStore>((set) => ({
   subjects: [],
+  isFallback: true,
+  errorMsg: undefined,
+  setSubjects: (subjects, isFallback, errorMsg) => {
+    set({ subjects, isFallback, errorMsg });
+  },
   loadSubjects: () => {
-    set({ subjects: SUBJECTS });
+    set({ subjects: SUBJECTS, isFallback: true, errorMsg: "Local backup fallback loaded" });
   },
   updateLeafStatus: (subjectId: string, nodeId: string, status: ProgressStatus) => {
     set((state) => ({
