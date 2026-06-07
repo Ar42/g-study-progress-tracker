@@ -8,9 +8,6 @@ import { BookOpen } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
   const subjects = useStudyStore((state) => state.subjects);
-  // const isFallback = useStudyStore((state) => state.isFallback);
-  const isFallback = useStudyStore(() => false); // Temporarily hardcoded to false since we're not implementing fallback logic in this version
-  const errorMsg = useStudyStore((state) => state.errorMsg);
   const navigate = useNavigate();
 
   const overallStats = subjects.reduce(
@@ -34,20 +31,6 @@ export const DashboardPage: React.FC = () => {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent p-6 md:p-8 border border-border-subtle">
         <div className="relative z-10 max-w-xl space-y-3">
-          <div className="flex items-center gap-2">
-            {isFallback ? (
-              <span
-                className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded bg-status-progress-bg text-status-progress border border-status-progress/25 cursor-help"
-                title={errorMsg}
-              >
-                Local JSON (Fallback)
-              </span>
-            ) : (
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded bg-status-completed-bg text-status-completed border border-status-completed/25">
-                Google Sheets Synced
-              </span>
-            )}
-          </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-text-primary">
             Welcome to your Study Dashboard
           </h1>

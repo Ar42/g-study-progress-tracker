@@ -10,7 +10,10 @@ import {
   // FileSpreadsheet,
   // Settings,
   X,
+  RefreshCw,
 } from "lucide-react";
+import { useLazyFetchStudyDataQuery } from "../services/sheetApi";
+import { useStudyStore } from "../stores/useStudyStore";
 
 interface SidebarProps {
   readonly isOpen: boolean;
@@ -36,6 +39,21 @@ const NAV_ITEMS: readonly NavItem[] = [
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const [triggerFetch, { isFetching }] = useLazyFetchStudyDataQuery();
+  const setSubjects = useStudyStore((state) => state.setSubjects);
+  const showToast = useStudyStore((state) => state.showToast);
+
+  const handleSync = async () => {
+    try {
+      const data = await triggerFetch().unwrap();
+      if (data) {
+        setSubjects(data);
+        showToast("Data synced successfully from Google Sheets!", "success");
+      }
+    } catch (error) {
+      showToast("Failed to sync data from Google Sheets.", "error");
+    }
+  };
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-bg-surface border-r border-border-subtle p-5">
@@ -96,7 +114,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         })}
       </nav>
 
-      <div className="border-t border-border-subtle pt-4 text-xs text-text-muted text-center">
+      <div className="px-4 py-4 border-t border-border-subtle">
+        <button
+          onClick={handleSync}
+          disabled={isFetching}
+          className={clsx(
+            "w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200",
+            isFetching
+              ? "bg-bg-surface-hover text-text-muted cursor-not-allowed"
+              : "bg-primary text-text-primary hover:bg-primary-hover shadow-md hover:shadow-lg shadow-primary/20",
+          )}
+        >
+          <RefreshCw className={clsx("h-4 w-4", isFetching && "animate-spin")} />
+          <span>{isFetching ? "Syncing..." : "Sync Now"}</span>
+        </button>
+      </div>
+
+      <div className="pt-4 pb-1 text-xs text-text-muted text-center">
         v1.0.0 &bull; Dynamic Calculations
       </div>
     </div>
