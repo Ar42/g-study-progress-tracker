@@ -1,14 +1,45 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { Subject } from "../types";
+import type { Subject, LinkItem } from "../types";
 import { ProgressStatus } from "../enums/progress";
 
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/16YFBrX2muNuj2NXNDb_YDnlwEJptKEYBnCv0YHiFnuQ/export?format=csv&gid=0";
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/16YFBrX2muNuj2NXNDb_YDnlwEJptKEYBnCv0YHiFnuQ/export?format=csv&gid=0";
 
 interface SheetRow {
   readonly id: string;
   readonly name: string;
   readonly parentId: string;
   readonly status: ProgressStatus;
+  readonly preliMarks?: string;
+  readonly comments?: string;
+  readonly startedDate?: string;
+  readonly targetToCompleteDate?: string;
+  readonly completedDate?: string;
+  readonly links?: readonly LinkItem[];
+}
+
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
 }
 
 export const sheetApi = createApi({
@@ -26,14 +57,28 @@ export const sheetApi = createApi({
           throw new Error("Sheet is empty or has no rows.");
         }
 
-        const headers = lines[0].split(",").map((h) => h.replace(/^["']|["']$/g, "").trim().toLowerCase());
+        const headers = parseCsvLine(lines[0]).map((h) =>
+          h.toLowerCase().replace(/\s+/g, ""),
+        );
         const idIndex = headers.indexOf("id");
         const nameIndex = headers.indexOf("name");
         const parentIdIndex = headers.indexOf("parentid");
         const statusIndex = headers.indexOf("status");
 
+        const preliMarksIndex = headers.indexOf("prelimarks");
+        const commentsIndex = headers.indexOf("comments");
+        const startedDateIndex = headers.indexOf("starteddate");
+        const targetDateIndex = headers.indexOf("targettocompletedate");
+        const completedDateIndex = headers.indexOf("completeddate");
+        const linksIndex =
+          headers.indexOf("links") !== -1
+            ? headers.indexOf("links")
+            : headers.indexOf("link");
+
         if (idIndex === -1 || nameIndex === -1) {
-          throw new Error("Invalid CSV structure: Missing 'Id' or 'Name' columns in sheet.");
+          throw new Error(
+            "Invalid CSV structure: Missing 'Id' or 'Name' columns in sheet.",
+          );
         }
 
         const rows: SheetRow[] = [];
@@ -41,12 +86,13 @@ export const sheetApi = createApi({
           const line = lines[i].trim();
           if (!line) continue;
 
-          const cols = line.split(",").map((col) => col.replace(/^["']|["']$/g, "").trim());
+          const cols = parseCsvLine(line);
           if (cols.length <= Math.max(idIndex, nameIndex)) continue;
 
           const id = cols[idIndex] || "";
           const name = cols[nameIndex] || "";
-          const parentId = parentIdIndex !== -1 ? cols[parentIdIndex] || "" : "";
+          const parentId =
+            parentIdIndex !== -1 ? cols[parentIdIndex] || "" : "";
           const statusRaw = statusIndex !== -1 ? cols[statusIndex] || "" : "";
 
           let status: ProgressStatus = ProgressStatus.NOT_STARTED;
@@ -57,8 +103,42 @@ export const sheetApi = createApi({
             status = ProgressStatus.IN_PROGRESS;
           }
 
+          const preliMarks =
+            preliMarksIndex !== -1 ? cols[preliMarksIndex] || "" : undefined;
+          const comments =
+            commentsIndex !== -1 ? cols[commentsIndex] || "" : undefined;
+          const startedDate =
+            startedDateIndex !== -1 ? cols[startedDateIndex] || "" : undefined;
+          const targetToCompleteDate =
+            targetDateIndex !== -1 ? cols[targetDateIndex] || "" : undefined;
+          const completedDate =
+            completedDateIndex !== -1
+              ? cols[completedDateIndex] || ""
+              : undefined;
+          const linksRaw = linksIndex !== -1 ? cols[linksIndex] || "" : "";
+
+          let links: LinkItem[] | undefined = undefined;
+          if (linksRaw) {
+            try {
+              links = JSON.parse(linksRaw);
+            } catch (e) {
+              console.warn(`Failed to parse links for row ${id}:`, e);
+            }
+          }
+
           if (id && name) {
-            rows.push({ id, name, parentId, status });
+            rows.push({
+              id,
+              name,
+              parentId,
+              status,
+              preliMarks,
+              comments,
+              startedDate,
+              targetToCompleteDate,
+              completedDate,
+              links,
+            });
           }
         }
 
@@ -74,16 +154,25 @@ export const sheetApi = createApi({
         const nodeMap = new Map<string, any>();
         rows.forEach((r) => {
           const isParent = parentIds.has(r.id);
+          const baseNode = {
+            id: r.id,
+            name: r.name,
+            preliMarks: r.preliMarks,
+            comments: r.comments,
+            startedDate: r.startedDate,
+            targetToCompleteDate: r.targetToCompleteDate,
+            completedDate: r.completedDate,
+            links: r.links,
+          };
+
           if (isParent) {
             nodeMap.set(r.id, {
-              id: r.id,
-              name: r.name,
+              ...baseNode,
               children: [],
             });
           } else {
             nodeMap.set(r.id, {
-              id: r.id,
-              name: r.name,
+              ...baseNode,
               status: r.status,
             });
           }
@@ -96,8 +185,7 @@ export const sheetApi = createApi({
 
           if (!r.parentId) {
             subjects.push({
-              id: r.id,
-              name: r.name,
+              ...node,
               children: node.children || [],
             });
           } else {
@@ -109,7 +197,9 @@ export const sheetApi = createApi({
         });
 
         if (subjects.length === 0) {
-          throw new Error("Could not parse any subjects from sheet hierarchy data.");
+          throw new Error(
+            "Could not parse any subjects from sheet hierarchy data.",
+          );
         }
 
         return subjects;

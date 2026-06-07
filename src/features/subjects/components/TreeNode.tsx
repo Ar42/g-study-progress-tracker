@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Folder, FolderOpen, BookOpen, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  Folder,
+  FolderOpen,
+  BookOpen,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import type { StudyNode } from "../../../types";
 import { ProgressStatus } from "../../../enums/progress";
 import { calculateProgress } from "../../../utils/progress";
@@ -12,7 +18,11 @@ interface TreeNodeProps {
   readonly depth?: number;
 }
 
-export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }) => {
+export const TreeNode: React.FC<TreeNodeProps> = ({
+  node,
+  subjectId,
+  depth = 0,
+}) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const updateLeafStatus = useStudyStore((state) => state.updateLeafStatus);
 
@@ -38,7 +48,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }
           "flex items-center justify-between py-2.5 px-4 my-1.5 rounded-lg border transition-all duration-200",
           isParent
             ? "bg-bg-surface/30 border-border-subtle hover:bg-bg-surface/50"
-            : "bg-bg-surface/10 border-transparent hover:bg-bg-surface/20"
+            : "bg-bg-surface/10 border-transparent hover:bg-bg-surface/20",
         )}
         style={{ marginLeft: `${depth * 16}px` }}
       >
@@ -74,15 +84,24 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }
           </span>
 
           {/* Node Name */}
-          <span
-            onClick={toggleExpand}
-            className={clsx(
-              "truncate text-sm select-none",
-              isParent ? "font-medium text-text-primary cursor-pointer" : "text-text-secondary"
+          <div className="flex items-center gap-2 truncate">
+            <span
+              onClick={toggleExpand}
+              className={clsx(
+                "truncate text-sm select-none",
+                isParent
+                  ? "font-medium text-text-primary cursor-pointer"
+                  : "text-text-secondary",
+              )}
+            >
+              {node.name}
+            </span>
+            {node.preliMarks && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 flex-shrink-0">
+                Preli: {node.preliMarks}
+              </span>
             )}
-          >
-            {node.name}
-          </span>
+          </div>
         </div>
 
         {/* Completion Info */}
@@ -98,8 +117,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }
                   stats.percentage === 100
                     ? "bg-status-completed-bg text-status-completed border-status-completed/30"
                     : stats.percentage > 0
-                    ? "bg-status-progress-bg text-status-progress border-status-progress/30"
-                    : "bg-status-notstarted-bg text-status-notstarted border-status-notstarted/30"
+                      ? "bg-status-progress-bg text-status-progress border-status-progress/30"
+                      : "bg-status-notstarted-bg text-status-notstarted border-status-notstarted/30",
                 )}
               >
                 {stats.percentage}%
@@ -119,16 +138,25 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }
                   (node as any).status === ProgressStatus.IN_PROGRESS &&
                     "text-status-progress border-status-progress/40 bg-status-progress-bg hover:bg-status-progress-bg/15",
                   (node as any).status === ProgressStatus.NOT_STARTED &&
-                    "text-status-notstarted border-status-notstarted/40 bg-status-notstarted-bg hover:bg-status-notstarted-bg/15"
+                    "text-status-notstarted border-status-notstarted/40 bg-status-notstarted-bg hover:bg-status-notstarted-bg/15",
                 )}
               >
-                <option value={ProgressStatus.NOT_STARTED} className="bg-bg-base text-text-secondary">
+                <option
+                  value={ProgressStatus.NOT_STARTED}
+                  className="bg-bg-base text-text-secondary"
+                >
                   Not Started
                 </option>
-                <option value={ProgressStatus.IN_PROGRESS} className="bg-bg-base text-status-progress">
+                <option
+                  value={ProgressStatus.IN_PROGRESS}
+                  className="bg-bg-base text-status-progress"
+                >
                   In Progress
                 </option>
-                <option value={ProgressStatus.COMPLETED} className="bg-bg-base text-status-completed">
+                <option
+                  value={ProgressStatus.COMPLETED}
+                  className="bg-bg-base text-status-completed"
+                >
                   Completed
                 </option>
               </select>
@@ -141,12 +169,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, subjectId, depth = 0 }
       {isParent && isExpanded && (
         <div className="w-full relative">
           {node.children.length > 0 && (
-            <div 
+            <div
               className="absolute left-[20px] top-0 bottom-2.5 w-[1px] bg-border-subtle"
               style={{ marginLeft: `${depth * 16}px` }}
             />
           )}
-          
+
           <div className="flex flex-col">
             {node.children.map((child) => (
               <TreeNode

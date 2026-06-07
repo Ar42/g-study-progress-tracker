@@ -1,12 +1,27 @@
 import { ProgressStatus } from "../enums/progress";
 
-export interface LeafNode {
+export interface LinkItem {
+  readonly title: string;
+  readonly link: string;
+  readonly sourceName: string;
+}
+
+export interface NodeExtension {
+  readonly preliMarks?: string;
+  readonly comments?: string;
+  readonly startedDate?: string;
+  readonly targetToCompleteDate?: string;
+  readonly completedDate?: string;
+  readonly links?: readonly LinkItem[];
+}
+
+export interface LeafNode extends NodeExtension {
   readonly id: string;
   readonly name: string;
   readonly status: ProgressStatus;
 }
 
-export interface ParentNode {
+export interface ParentNode extends NodeExtension {
   readonly id: string;
   readonly name: string;
   readonly children: readonly StudyNode[];
@@ -14,7 +29,7 @@ export interface ParentNode {
 
 export type StudyNode = LeafNode | ParentNode;
 
-export interface Subject {
+export interface Subject extends NodeExtension {
   readonly id: string;
   readonly name: string;
   readonly children: readonly StudyNode[];

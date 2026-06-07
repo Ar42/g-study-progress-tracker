@@ -70,10 +70,17 @@ export const DashboardPage: React.FC = () => {
                 className="flex flex-col items-center text-center justify-between h-full gap-5 group"
               >
                 <div className="space-y-2 w-full">
-                  <h3 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors truncate">
-                    {subj.name}
-                  </h3>
-                  <p className="text-xs text-text-muted">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <h3 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors truncate w-full text-center">
+                      {subj.name}
+                    </h3>
+                    {subj.preliMarks && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-status-progress border border-primary/20">
+                        Preli: {subj.preliMarks}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">
                     {stats.completed} / {stats.total} Leaf Chapters
                   </p>
                 </div>
