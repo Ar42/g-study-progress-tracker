@@ -1,10 +1,28 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Menu } from "lucide-react";
+import { Menu, RefreshCw } from "lucide-react";
+import { clsx } from "clsx";
+import { useLazyFetchStudyDataQuery } from "../services/sheetApi";
+import { useStudyStore } from "../stores/useStudyStore";
 
 export const AppShell: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [triggerFetch, { isFetching }] = useLazyFetchStudyDataQuery();
+  const setSubjects = useStudyStore((state) => state.setSubjects);
+  const showToast = useStudyStore((state) => state.showToast);
+
+  const handleSync = async () => {
+    try {
+      const data = await triggerFetch().unwrap();
+      if (data) {
+        setSubjects(data);
+        showToast("Data synced successfully from Google Sheets!", "success");
+      }
+    } catch (error) {
+      showToast("Failed to sync data from Google Sheets.", "error");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-bg-base text-text-primary">
@@ -38,6 +56,21 @@ export const AppShell: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Floating Sync Button */}
+      <button
+        onClick={handleSync}
+        disabled={isFetching}
+        title="Sync Now"
+        className={clsx(
+          "fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-lg transition-all duration-300",
+          isFetching
+            ? "bg-bg-surface border border-border-subtle text-text-muted cursor-not-allowed scale-95"
+            : "bg-primary text-text-primary hover:bg-primary-hover hover:scale-105 hover:shadow-primary/30 shadow-primary/20",
+        )}
+      >
+        <RefreshCw className={clsx("h-6 w-6", isFetching && "animate-spin")} />
+      </button>
     </div>
   );
 };
