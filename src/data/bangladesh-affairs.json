@@ -1,0 +1,51 @@
+{
+  "id": "bangladesh-affairs",
+  "name": "বাংলাদেশ বিষয়াবলি",
+  "children": [
+    {
+      "id": "bangladesher-jatiyo-bishoyaboli",
+      "name": "বাংলাদেশের জাতীয় বিষয়াবলি",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "bangladesher-korijjo-sompod",
+      "name": "বাংলাদেশের কৃষিজ সম্পদ",
+      "status": "COMPLETED"
+    },
+    {
+      "id": "jonoshongkha-jonoshumari-jati-goshti-khuddro-nrigoshthi",
+      "name": "বাংলাদেশের জনসংখ্যা, জনশুমারি, জাতি, গোষ্ঠী ও ক্ষুদ্র নৃগোষ্ঠী সংক্রান্ত বিষয়াদি",
+      "status": "COMPLETED"
+    },
+    {
+      "id": "bangladesher-orthoniti",
+      "name": "বাংলাদেশের অর্থনীতি",
+      "status": "COMPLETED"
+    },
+    {
+      "id": "bangladesher-shilpo-baniijjo",
+      "name": "বাংলাদেশের শিল্প ও বাণিজ্য",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "bangladesher-songbidhan",
+      "name": "বাংলাদেশের সংবিধান",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "rajnoitik-byabostha",
+      "name": "বাংলাদেশের রাজনৈতিক ব্যবস্থা",
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "sorkar-byabostha",
+      "name": "বাংলাদেশের সরকার ব্যবস্থা",
+      "status": "IN_PROGRESS"
+    },
+    {
+      "id": "national-achievements-personalities-institutions-sports-media",
+      "name": "বাংলাদেশের জাতীয় অর্জন, বিশিষ্ট ব্যক্তিত্ব, গুরুত্বপূর্ণ প্রতিষ্ঠানসমূহ, জাতীয় পুরস্কার, বাংলাদেশের খেলাধুলাসহ চলচ্চিত্র, গণমাধ্যম-সংশ্লিষ্ট বিষয়াদি",
+      "status": "NOT_STARTED"
+    }
+  ]
+}

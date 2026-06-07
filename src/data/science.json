@@ -1,0 +1,49 @@
+{
+  "id": "science",
+  "name": "Science",
+  "children": [
+    {
+      "id": "botany",
+      "name": "Botany",
+      "children": [
+        {
+          "id": "virus",
+          "name": "Virus",
+          "status": "COMPLETED"
+        },
+        {
+          "id": "bacteria",
+          "name": "Bacteria",
+          "status": "NOT_STARTED"
+        }
+      ]
+    },
+    {
+      "id": "zoology",
+      "name": "Zoology",
+      "children": [
+        {
+          "id": "mammals",
+          "name": "Mammals",
+          "children": [
+            {
+              "id": "primates",
+              "name": "Primates",
+              "status": "COMPLETED"
+            },
+            {
+              "id": "rodents",
+              "name": "Rodents",
+              "status": "IN_PROGRESS"
+            }
+          ]
+        },
+        {
+          "id": "reptiles",
+          "name": "Reptiles",
+          "status": "NOT_STARTED"
+        }
+      ]
+    }
+  ]
+}
