@@ -7,7 +7,8 @@ export interface LinkItem {
 }
 
 export interface NodeExtension {
-  readonly preliMarks?: string;
+  readonly is_subject?: boolean;
+  readonly preliMarks?: string | number;
   readonly comments?: string;
   readonly startedDate?: string;
   readonly targetToCompleteDate?: string;

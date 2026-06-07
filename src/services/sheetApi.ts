@@ -16,6 +16,7 @@ interface SheetRow {
   readonly targetToCompleteDate?: string;
   readonly completedDate?: string;
   readonly links?: readonly LinkItem[];
+  readonly is_subject?: boolean;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -74,6 +75,9 @@ export const sheetApi = createApi({
           headers.indexOf("links") !== -1
             ? headers.indexOf("links")
             : headers.indexOf("link");
+        const isSubjectIndex = headers.indexOf("is_subject") !== -1
+            ? headers.indexOf("is_subject")
+            : headers.indexOf("issubject");
 
         if (idIndex === -1 || nameIndex === -1) {
           throw new Error(
@@ -126,6 +130,9 @@ export const sheetApi = createApi({
             }
           }
 
+          const isSubjectRaw = isSubjectIndex !== -1 ? cols[isSubjectIndex] || "" : "";
+          const is_subject = isSubjectRaw.toUpperCase() === "TRUE";
+
           if (id && name) {
             rows.push({
               id,
@@ -138,6 +145,7 @@ export const sheetApi = createApi({
               targetToCompleteDate,
               completedDate,
               links,
+              is_subject,
             });
           }
         }
@@ -163,6 +171,7 @@ export const sheetApi = createApi({
             targetToCompleteDate: r.targetToCompleteDate,
             completedDate: r.completedDate,
             links: r.links,
+            is_subject: r.is_subject,
           };
 
           if (isParent) {
@@ -183,12 +192,13 @@ export const sheetApi = createApi({
           const node = nodeMap.get(r.id);
           if (!node) return;
 
-          if (!r.parentId) {
+          // Treat as root subject if is_subject is explicitly true, or fallback to parentId check
+          if (r.is_subject || (!r.parentId && r.is_subject !== false)) {
             subjects.push({
               ...node,
               children: node.children || [],
             });
-          } else {
+          } else if (r.parentId) {
             const parentNode = nodeMap.get(r.parentId);
             if (parentNode && parentNode.children) {
               parentNode.children.push(node);
