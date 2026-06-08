@@ -5,8 +5,8 @@ import {
   BookOpen,
   ChevronRight,
   ChevronDown,
-  Edit2,
-  ExternalLink
+  // Edit2,
+  ExternalLink,
 } from "lucide-react";
 import type { StudyNode } from "../../../types";
 import { ProgressStatus } from "../../../enums/progress";
@@ -34,7 +34,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // Filtering Logic
   // If it's a leaf node and doesn't match filter, hide it
-  if (!isParent && filterStatus !== "ALL" && (node as any).status !== filterStatus) {
+  if (
+    !isParent &&
+    filterStatus !== "ALL" &&
+    (node as any).status !== filterStatus
+  ) {
     return null;
   }
 
@@ -120,7 +124,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 className={clsx(
                   "break-words whitespace-normal text-sm select-none hover:underline cursor-pointer",
                   isParent ? "font-medium" : "",
-                  getTextColor()
+                  getTextColor(),
                 )}
               >
                 {node.name}
@@ -177,7 +181,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               </span>
             </div>
           )}
-
         </div>
       </div>
 
