@@ -119,13 +119,18 @@ export const SubjectPage: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-transparent text-sm text-text-primary focus:outline-none"
+              className="bg-transparent text-sm text-text-primary focus:outline-none appearance-none pr-2"
             >
-              <option value="ALL">All Status</option>
-              <option value={ProgressStatus.COMPLETED}>Completed</option>
-              <option value={ProgressStatus.IN_PROGRESS}>In Progress</option>
-              <option value={ProgressStatus.NOT_STARTED}>Not Started</option>
+              <option value="ALL" className="bg-bg-surface text-text-primary">All Status</option>
+              <option value={ProgressStatus.COMPLETED} className="bg-bg-surface text-text-primary">Completed</option>
+              <option value={ProgressStatus.IN_PROGRESS} className="bg-bg-surface text-text-primary">In Progress</option>
+              <option value={ProgressStatus.NOT_STARTED} className="bg-bg-surface text-text-primary">Not Started</option>
             </select>
+            {filterStatus !== "ALL" && (
+              <button onClick={() => setFilterStatus("ALL")} className="text-text-muted hover:text-text-primary">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            )}
           </div>
           <button
             onClick={handleCreateChapter}
@@ -139,7 +144,7 @@ export const SubjectPage: React.FC = () => {
       </div>
 
       {/* Progress Card */}
-      <Card className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6">
+      <Card className="flex flex-col sm:flex-row items-center justify-between gap-6 p-4 sm:p-6">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
             <BookOpen className="h-6 w-6" />
@@ -178,7 +183,7 @@ export const SubjectPage: React.FC = () => {
       </Card>
 
       {/* Tree Card */}
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <h3 className="font-bold text-lg text-text-primary mb-6 border-b border-border-subtle pb-4">
           Chapter Hierarchy
         </h3>
@@ -206,7 +211,7 @@ export const SubjectPage: React.FC = () => {
             subject.startedDate ||
             subject.targetToCompleteDate ||
             subject.completedDate) && (
-            <Card className="p-6 flex flex-col h-full">
+            <Card className="p-4 sm:p-6 flex flex-col h-full">
               <div className="flex items-center gap-2 mb-4 border-b border-border-subtle pb-3">
                 <BookOpen className="h-5 w-5 text-primary" />
                 <h3 className="font-bold text-lg text-text-primary">
@@ -277,7 +282,7 @@ export const SubjectPage: React.FC = () => {
         <div>
           {/* Links Card */}
           {sortedLinks && sortedLinks.length > 0 && (
-            <Card className="p-6 flex flex-col h-full">
+            <Card className="p-4 sm:p-6 flex flex-col h-full">
               <div className="flex items-center gap-2 mb-4 border-b border-border-subtle pb-3">
                 <LinkIcon className="h-5 w-5 text-primary" />
                 <h3 className="font-bold text-lg text-text-primary">

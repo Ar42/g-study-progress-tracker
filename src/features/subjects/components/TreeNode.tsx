@@ -48,14 +48,24 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
-  const getStatusDisplay = (status: ProgressStatus) => {
-    switch (status) {
-      case ProgressStatus.COMPLETED:
-        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-completed border-status-completed/40 bg-status-completed-bg">Completed</span>;
-      case ProgressStatus.IN_PROGRESS:
-        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-progress border-status-progress/40 bg-status-progress-bg">In Progress</span>;
-      default:
-        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-notstarted border-status-notstarted/40 bg-status-notstarted-bg">Not Started</span>;
+  const getTextColor = () => {
+    if (isParent) {
+      if (!stats) return "text-text-primary";
+      if (stats.percentage === 100) return "text-status-completed";
+      if (stats.percentage > 0) return "text-status-progress";
+      return "text-status-notstarted";
+    } else {
+      const status = (node as any).status;
+      if (status === ProgressStatus.COMPLETED) return "text-status-completed";
+      if (status === ProgressStatus.IN_PROGRESS) return "text-status-progress";
+      return "text-status-notstarted";
+    }
+  };
+
+  const handleTextClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(node);
     }
   };
 
@@ -91,7 +101,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             )}
 
             {/* File/Folder Icon */}
-            <span className="text-text-muted flex-shrink-0">
+            <span className="text-text-muted flex-shrink-0 hidden sm:block">
               {isParent ? (
                 isExpanded ? (
                   <FolderOpen className="h-4 w-4 text-primary" />
@@ -106,12 +116,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             {/* Node Name */}
             <div className="flex items-center gap-2 break-words whitespace-normal flex-1">
               <span
-                onClick={toggleExpand}
+                onClick={handleTextClick}
                 className={clsx(
-                  "break-words whitespace-normal text-sm select-none",
-                  isParent
-                    ? "font-medium text-text-primary cursor-pointer"
-                    : "text-text-secondary",
+                  "break-words whitespace-normal text-sm select-none hover:underline cursor-pointer",
+                  isParent ? "font-medium" : "",
+                  getTextColor()
                 )}
               >
                 {node.name}
@@ -169,21 +178,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             </div>
           )}
 
-          {!isParent && (
-            <div className="relative">
-              {getStatusDisplay((node as any).status)}
-            </div>
-          )}
-
-          {onEdit && (
-            <button
-              onClick={() => onEdit(node)}
-              className="p-1.5 text-text-muted hover:text-primary hover:bg-bg-surface-hover rounded-md transition-colors focus:outline-none cursor-pointer"
-              title="Edit Chapter"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
 
