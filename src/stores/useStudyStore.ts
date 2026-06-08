@@ -2,19 +2,12 @@ import { create } from "zustand";
 import type { Subject, StudyNode } from "../types";
 import { ProgressStatus } from "../enums/progress";
 
-export interface ToastMessage {
-  readonly id: string;
-  readonly message: string;
-  readonly type: "success" | "info" | "error";
-}
+import { toast } from "sonner";
 
 interface StudyStore {
   readonly subjects: readonly Subject[];
-  readonly toast: ToastMessage | null;
   readonly setSubjects: (subjects: readonly Subject[]) => void;
   readonly updateLeafStatus: (subjectId: string, nodeId: string, status: ProgressStatus) => void;
-  readonly showToast: (message: string, type?: "success" | "info" | "error") => void;
-  readonly clearToast: () => void;
 }
 
 // Helper function to recursively update a node in the children tree
@@ -37,26 +30,10 @@ function updateNodeInTree(nodes: readonly StudyNode[], nodeId: string, status: P
   });
 }
 
-export const useStudyStore = create<StudyStore>((set, get) => ({
+export const useStudyStore = create<StudyStore>((set) => ({
   subjects: [],
-  toast: null,
   setSubjects: (subjects) => {
     set({ subjects });
-  },
-  showToast: (message, type = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    set({ toast: { id, message, type } });
-    
-    // Auto-dismiss after 3.5 seconds
-    setTimeout(() => {
-      const currentToast = get().toast;
-      if (currentToast && currentToast.id === id) {
-        get().clearToast();
-      }
-    }, 3500);
-  },
-  clearToast: () => {
-    set({ toast: null });
   },
   updateLeafStatus: (subjectId: string, nodeId: string, status: ProgressStatus) => {
     set((state) => ({
@@ -68,6 +45,6 @@ export const useStudyStore = create<StudyStore>((set, get) => ({
         };
       }),
     }));
-    get().showToast("Progress updated!", "success");
+    toast.success("Progress updated!");
   },
 }));

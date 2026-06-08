@@ -1,0 +1,27 @@
+:root {
+  /* Sunset Aurora (Deep purple backgrounds, warm orange/pink gradients, soft white text) */
+  --primary: hsl(15, 90%, 60%);
+  --primary-hover: hsl(15, 90%, 70%);
+  --secondary: hsl(330, 80%, 65%);
+  
+  --bg-base: hsl(270, 40%, 10%);
+  --bg-surface: hsla(270, 40%, 15%, 0.7);
+  --bg-surface-hover: hsla(270, 40%, 20%, 0.9);
+  
+  --border-subtle: hsla(15, 50%, 50%, 0.15);
+  --border-focus: hsla(15, 90%, 60%, 0.4);
+
+  --text-primary: hsl(0, 0%, 95%);
+  --text-secondary: hsl(270, 20%, 75%);
+  --text-muted: hsl(270, 15%, 60%);
+
+  /* Status Colors */
+  --status-completed: hsl(142, 76%, 45%);
+  --status-completed-bg: hsla(142, 76%, 45%, 0.12);
+  
+  --status-progress: hsl(37, 95%, 52%);
+  --status-progress-bg: hsla(37, 95%, 52%, 0.12);
+  
+  --status-notstarted: hsl(270, 15%, 60%);
+  --status-notstarted-bg: hsla(270, 15%, 60%, 0.12);
+}

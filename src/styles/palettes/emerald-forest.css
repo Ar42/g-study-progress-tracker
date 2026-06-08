@@ -1,0 +1,28 @@
+:root {
+  /* Emerald Forest (Dark moss backgrounds, bright emerald/teal accents, soft sage text) */
+  --primary: hsl(160, 84%, 39%);
+  --primary-hover: hsl(160, 84%, 49%);
+  --secondary: hsl(175, 70%, 41%);
+
+  --bg-base: hsl(150, 20%, 8%);
+  /* --bg-surface: hsla(150, 20%, 13%, 0.7); */
+  --bg-surface: transparent;
+  --bg-surface-hover: hsla(150, 20%, 18%, 0.9);
+
+  --border-subtle: hsla(160, 40%, 40%, 0.15);
+  --border-focus: hsla(160, 84%, 39%, 0.4);
+
+  --text-primary: hsl(150, 30%, 95%);
+  --text-secondary: hsl(150, 20%, 75%);
+  --text-muted: hsl(150, 15%, 55%);
+
+  /* Status Colors */
+  --status-completed: hsl(142, 76%, 45%);
+  --status-completed-bg: hsla(142, 76%, 45%, 0.12);
+
+  --status-progress: hsl(37, 95%, 52%);
+  --status-progress-bg: hsla(37, 95%, 52%, 0.12);
+
+  --status-notstarted: hsl(150, 15%, 55%);
+  --status-notstarted-bg: hsla(150, 15%, 55%, 0.12);
+}

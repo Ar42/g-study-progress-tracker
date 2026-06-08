@@ -1,0 +1,27 @@
+:root {
+  /* Ocean Glass (Soft teal gradients, translucent glassmorphism panels, deep navy text) */
+  --primary: hsl(190, 90%, 45%);
+  --primary-hover: hsl(190, 90%, 55%);
+  --secondary: hsl(200, 80%, 60%);
+  
+  --bg-base: hsl(210, 50%, 95%);
+  --bg-surface: hsla(0, 0%, 100%, 0.6);
+  --bg-surface-hover: hsla(0, 0%, 100%, 0.8);
+  
+  --border-subtle: hsla(190, 30%, 50%, 0.15);
+  --border-focus: hsla(190, 90%, 45%, 0.4);
+
+  --text-primary: hsl(210, 50%, 15%);
+  --text-secondary: hsl(210, 30%, 40%);
+  --text-muted: hsl(210, 20%, 55%);
+
+  /* Status Colors */
+  --status-completed: hsl(142, 70%, 35%);
+  --status-completed-bg: hsla(142, 70%, 35%, 0.15);
+  
+  --status-progress: hsl(37, 95%, 45%);
+  --status-progress-bg: hsla(37, 95%, 45%, 0.15);
+  
+  --status-notstarted: hsl(210, 20%, 55%);
+  --status-notstarted-bg: hsla(210, 20%, 55%, 0.15);
+}

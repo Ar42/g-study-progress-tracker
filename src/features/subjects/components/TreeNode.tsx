@@ -5,38 +5,57 @@ import {
   BookOpen,
   ChevronRight,
   ChevronDown,
+  Edit2,
+  ExternalLink
 } from "lucide-react";
 import type { StudyNode } from "../../../types";
 import { ProgressStatus } from "../../../enums/progress";
 import { calculateProgress } from "../../../utils/progress";
-import { useStudyStore } from "../../../stores/useStudyStore";
 import { clsx } from "clsx";
 
 interface TreeNodeProps {
   readonly node: StudyNode;
   readonly subjectId: string;
   readonly depth?: number;
+  readonly onEdit?: (node: any) => void;
+  readonly filterStatus?: string;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   subjectId,
   depth = 0,
+  onEdit,
+  filterStatus = "ALL",
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const updateLeafStatus = useStudyStore((state) => state.updateLeafStatus);
-
   const isParent = "children" in node;
-
   const stats = isParent ? calculateProgress(node) : null;
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateLeafStatus(subjectId, node.id, e.target.value as ProgressStatus);
-  };
+  // Filtering Logic
+  // If it's a leaf node and doesn't match filter, hide it
+  if (!isParent && filterStatus !== "ALL" && (node as any).status !== filterStatus) {
+    return null;
+  }
+
+  // If it's a parent, we only want to hide it if ALL its leaf descendants are filtered out.
+  // For simplicity, we just let it render, but its children might be empty.
+  // A better approach is to compute if it has visible children, but we'll stick to a simple filter.
 
   const toggleExpand = () => {
     if (isParent) {
       setIsExpanded(!isExpanded);
+    }
+  };
+
+  const getStatusDisplay = (status: ProgressStatus) => {
+    switch (status) {
+      case ProgressStatus.COMPLETED:
+        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-completed border-status-completed/40 bg-status-completed-bg">Completed</span>;
+      case ProgressStatus.IN_PROGRESS:
+        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-progress border-status-progress/40 bg-status-progress-bg">In Progress</span>;
+      default:
+        return <span className="text-xs font-semibold px-2.5 py-1 rounded-md border text-status-notstarted border-status-notstarted/40 bg-status-notstarted-bg">Not Started</span>;
     }
   };
 
@@ -45,75 +64,99 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       {/* Node Row */}
       <div
         className={clsx(
-          "flex items-center justify-between py-2.5 px-4 my-1.5 rounded-lg border transition-all duration-200",
+          "flex items-center justify-between py-2.5 px-4 my-1.5 rounded-lg border transition-all duration-200 group",
           isParent
             ? "bg-bg-surface/30 border-border-subtle hover:bg-bg-surface/50"
             : "bg-bg-surface/10 border-transparent hover:bg-bg-surface/20",
         )}
         style={{ marginLeft: `${depth * 16}px` }}
       >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Collapse/Expand toggle for parent */}
-          {isParent ? (
-            <button
-              onClick={toggleExpand}
-              className="p-1 rounded hover:bg-bg-surface-hover text-text-secondary hover:text-text-primary transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
-              aria-label={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-          ) : (
-            <span className="w-6" />
-          )}
-
-          {/* File/Folder Icon */}
-          <span className="text-text-muted flex-shrink-0">
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {/* Collapse/Expand toggle for parent */}
             {isParent ? (
-              isExpanded ? (
-                <FolderOpen className="h-4 w-4 text-primary" />
-              ) : (
-                <Folder className="h-4 w-4 text-primary" />
-              )
+              <button
+                onClick={toggleExpand}
+                className="p-1 rounded hover:bg-bg-surface-hover text-text-secondary hover:text-text-primary transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+                aria-label={isExpanded ? "Collapse" : "Expand"}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
             ) : (
-              <BookOpen className="h-4 w-4 text-text-muted" />
+              <span className="w-6" />
             )}
-          </span>
 
-          {/* Node Name */}
-          <div className="flex items-center gap-2 truncate">
-            <span
-              onClick={toggleExpand}
-              className={clsx(
-                "truncate text-sm select-none",
-                isParent
-                  ? "font-medium text-text-primary cursor-pointer"
-                  : "text-text-secondary",
+            {/* File/Folder Icon */}
+            <span className="text-text-muted flex-shrink-0">
+              {isParent ? (
+                isExpanded ? (
+                  <FolderOpen className="h-4 w-4 text-primary" />
+                ) : (
+                  <Folder className="h-4 w-4 text-primary" />
+                )
+              ) : (
+                <BookOpen className="h-4 w-4 text-text-muted" />
               )}
-            >
-              {node.name}
             </span>
-            {node.preliMarks && (
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 flex-shrink-0">
-                Preli: {node.preliMarks}
+
+            {/* Node Name */}
+            <div className="flex items-center gap-2 break-words whitespace-normal flex-1">
+              <span
+                onClick={toggleExpand}
+                className={clsx(
+                  "break-words whitespace-normal text-sm select-none",
+                  isParent
+                    ? "font-medium text-text-primary cursor-pointer"
+                    : "text-text-secondary",
+                )}
+              >
+                {node.name}
               </span>
-            )}
+              {node.preliMarks && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 flex-shrink-0 font-numbers">
+                  Preli: {node.preliMarks}
+                </span>
+              )}
+            </div>
           </div>
+          {node.comments && (
+            <div className="text-xs text-text-muted mt-1 ml-[34px] italic break-words whitespace-normal opacity-80">
+              {node.comments}
+            </div>
+          )}
+          {node.links && node.links.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 ml-[34px]">
+              {node.links.map((link, idx) => (
+                <a
+                  key={idx}
+                  href={link.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded-md hover:bg-primary/20 transition-colors max-w-full overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{link.title || link.link}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Completion Info */}
+        {/* Completion Info & Actions */}
         <div className="flex items-center gap-3 flex-shrink-0 ml-4">
           {isParent && stats && (
             <div className="flex items-center gap-2.5">
-              <span className="text-xs text-text-muted">
+              <span className="text-xs text-text-muted font-numbers">
                 {stats.completed} / {stats.total}
               </span>
               <span
                 className={clsx(
-                  "text-xs px-2.5 py-0.5 rounded-full font-medium border transition-colors",
+                  "text-xs px-2.5 py-0.5 rounded-full font-medium border transition-colors font-numbers",
                   stats.percentage === 100
                     ? "bg-status-completed-bg text-status-completed border-status-completed/30"
                     : stats.percentage > 0
@@ -128,39 +171,18 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
           {!isParent && (
             <div className="relative">
-              <select
-                value={(node as any).status}
-                onChange={handleStatusChange}
-                className={clsx(
-                  "text-xs font-semibold px-2 py-1 rounded-md border bg-bg-surface focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer transition-all duration-200",
-                  (node as any).status === ProgressStatus.COMPLETED &&
-                    "text-status-completed border-status-completed/40 bg-status-completed-bg hover:bg-status-completed-bg/15",
-                  (node as any).status === ProgressStatus.IN_PROGRESS &&
-                    "text-status-progress border-status-progress/40 bg-status-progress-bg hover:bg-status-progress-bg/15",
-                  (node as any).status === ProgressStatus.NOT_STARTED &&
-                    "text-status-notstarted border-status-notstarted/40 bg-status-notstarted-bg hover:bg-status-notstarted-bg/15",
-                )}
-              >
-                <option
-                  value={ProgressStatus.NOT_STARTED}
-                  className="bg-bg-base text-text-secondary"
-                >
-                  Not Started
-                </option>
-                <option
-                  value={ProgressStatus.IN_PROGRESS}
-                  className="bg-bg-base text-status-progress"
-                >
-                  In Progress
-                </option>
-                <option
-                  value={ProgressStatus.COMPLETED}
-                  className="bg-bg-base text-status-completed"
-                >
-                  Completed
-                </option>
-              </select>
+              {getStatusDisplay((node as any).status)}
             </div>
+          )}
+
+          {onEdit && (
+            <button
+              onClick={() => onEdit(node)}
+              className="p-1.5 text-text-muted hover:text-primary hover:bg-bg-surface-hover rounded-md transition-colors focus:outline-none cursor-pointer"
+              title="Edit Chapter"
+            >
+              <Edit2 className="h-4 w-4" />
+            </button>
           )}
         </div>
       </div>
@@ -182,6 +204,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 node={child}
                 subjectId={subjectId}
                 depth={depth + 1}
+                onEdit={onEdit}
+                filterStatus={filterStatus}
               />
             ))}
           </div>

@@ -3,12 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { clsx } from "clsx";
 import {
   LayoutDashboard,
-  // BarChart3,
-  // Calendar,
-  // GraduationCap,
-  // BookOpen,
-  // FileSpreadsheet,
-  Settings,
+  FileSpreadsheet,
   X,
 } from "lucide-react";
 
@@ -26,7 +21,7 @@ interface NavItem {
 
 const NAV_ITEMS: readonly NavItem[] = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Admin Panel", path: "/admin", icon: Settings },
+  { name: "Reports", path: "/reports", icon: FileSpreadsheet },
   // { name: "Analytics", path: "/analytics", icon: BarChart3, disabled: true },
   // { name: "Exam Planner", path: "/exam-planner", icon: Calendar, disabled: true },
   // { name: "Mock Tests", path: "/mock-tests", icon: GraduationCap, disabled: true },

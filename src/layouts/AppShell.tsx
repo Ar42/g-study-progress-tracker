@@ -5,22 +5,22 @@ import { Menu, RefreshCw } from "lucide-react";
 import { clsx } from "clsx";
 import { useLazyFetchStudyDataQuery } from "../services/sheetApi";
 import { useStudyStore } from "../stores/useStudyStore";
+import { toast } from "sonner";
 
 export const AppShell: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [triggerFetch, { isFetching }] = useLazyFetchStudyDataQuery();
   const setSubjects = useStudyStore((state) => state.setSubjects);
-  const showToast = useStudyStore((state) => state.showToast);
 
   const handleSync = async () => {
     try {
       const data = await triggerFetch().unwrap();
       if (data) {
         setSubjects(data);
-        showToast("Data synced successfully from Google Sheets!", "success");
+        toast.success("Data synced successfully from Google Sheets!");
       }
     } catch (error) {
-      showToast("Failed to sync data from Google Sheets.", "error");
+      toast.error("Failed to sync data from Google Sheets.");
     }
   };
 

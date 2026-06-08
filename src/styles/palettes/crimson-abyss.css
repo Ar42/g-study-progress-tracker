@@ -1,0 +1,28 @@
+/* Crimson Abyss (Black & Red) Palette */
+:root {
+  /* Backgrounds */
+  --bg-base: #000000;
+  --bg-surface: #0a0000;
+  --bg-surface-hover: #140000;
+
+  /* Text Colors */
+  --text-primary: #ff4d4d;
+  --text-secondary: #cc3d3d;
+  --text-muted: #992e2e;
+
+  /* Brand Colors */
+  --primary: #ff0000;
+  --primary-hover: #cc0000;
+  --secondary: #800000;
+
+  /* Status Colors */
+  --status-completed: #ff1a1a;
+  --status-completed-bg: rgba(255, 26, 26, 0.1);
+  --status-progress: #cc0000;
+  --status-progress-bg: rgba(204, 0, 0, 0.1);
+  --status-notstarted: #800000;
+  --status-notstarted-bg: rgba(128, 0, 0, 0.1);
+
+  /* Borders */
+  --border-subtle: #330000;
+}

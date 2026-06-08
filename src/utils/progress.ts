@@ -7,6 +7,12 @@ export interface ProgressStats {
   readonly percentage: number;
 }
 
+export interface MarksStats {
+  readonly totalMarks: number;
+  readonly obtainedMarks: number;
+  readonly remainingMarks: number;
+}
+
 /**
  * Recursively counts completed and total leaf nodes under a StudyNode or array of StudyNodes.
  */
@@ -36,6 +42,39 @@ export function getLeafStats(nodes: readonly StudyNode[] | StudyNode): { complet
   }
 
   return { completed: 0, total: 0 };
+}
+
+/**
+ * Recursively calculates marks from preliMarks in leaf nodes.
+ */
+export function getMarksStats(nodes: readonly StudyNode[] | StudyNode | Subject): MarksStats {
+  if (Array.isArray(nodes)) {
+    let totalMarks = 0;
+    let obtainedMarks = 0;
+    for (const node of nodes) {
+      const stats = getMarksStats(node);
+      totalMarks += stats.totalMarks;
+      obtainedMarks += stats.obtainedMarks;
+    }
+    return { totalMarks, obtainedMarks, remainingMarks: totalMarks - obtainedMarks };
+  }
+
+  const node = nodes as StudyNode;
+  if ("children" in node && Array.isArray(node.children)) {
+    return getMarksStats(node.children);
+  }
+
+  if ("status" in node) {
+    const marks = Number(node.preliMarks) || 0;
+    const obtained = node.status === ProgressStatus.COMPLETED ? marks : 0;
+    return {
+      totalMarks: marks,
+      obtainedMarks: obtained,
+      remainingMarks: marks - obtained,
+    };
+  }
+
+  return { totalMarks: 0, obtainedMarks: 0, remainingMarks: 0 };
 }
 
 /**

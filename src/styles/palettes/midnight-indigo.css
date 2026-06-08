@@ -1,0 +1,27 @@
+:root {
+  /* Midnight Indigo (Deep blue backgrounds, vibrant indigo accents, slate gray text) */
+  --primary: hsl(263, 90%, 65%);
+  --primary-hover: hsl(263, 90%, 75%);
+  --secondary: hsl(217, 91%, 65%);
+  
+  --bg-base: hsl(222, 47%, 7%);
+  --bg-surface: hsla(223, 47%, 12%, 0.7);
+  --bg-surface-hover: hsla(223, 47%, 18%, 0.9);
+  
+  --border-subtle: hsla(217, 30%, 50%, 0.12);
+  --border-focus: hsla(263, 90%, 65%, 0.4);
+
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 75%);
+  --text-muted: hsl(215, 16%, 57%);
+
+  /* Status Colors */
+  --status-completed: hsl(142, 76%, 45%);
+  --status-completed-bg: hsla(142, 76%, 45%, 0.12);
+  
+  --status-progress: hsl(37, 95%, 52%);
+  --status-progress-bg: hsla(37, 95%, 52%, 0.12);
+  
+  --status-notstarted: hsl(215, 16%, 57%);
+  --status-notstarted-bg: hsla(215, 16%, 57%, 0.12);
+}

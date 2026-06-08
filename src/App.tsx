@@ -1,12 +1,13 @@
 import { useEffect } from "react";
+import { Toaster } from "sonner";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useStudyStore } from "./stores/useStudyStore";
 import { AppShell } from "./layouts/AppShell";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { SubjectPage } from "./pages/subject/SubjectPage";
+import { ReportsPage } from "./pages/reports/ReportsPage";
 import { useFetchStudyDataQuery } from "./services/sheetApi";
 
-import { AdminPage } from "./pages/admin/AdminPage";
 
 function App() {
   const { data, isLoading, error } = useFetchStudyDataQuery();
@@ -67,11 +68,12 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster theme="dark" richColors position="top-right" />
       <Routes>
         <Route path="/" element={<AppShell />}>
           <Route index element={<DashboardPage />} />
           <Route path="subject/:subjectId" element={<SubjectPage />} />
-          <Route path="admin" element={<AdminPage />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

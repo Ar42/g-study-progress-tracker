@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useStudyStore } from "../../stores/useStudyStore";
 import { calculateProgress } from "../../utils/progress";
 import { TreeNode } from "../../features/subjects/components/TreeNode";
 import { Card } from "../../components/ui/Card";
 import { ProgressCircle } from "../../components/ui/ProgressCircle";
+import { ChapterFormModal } from "./ChapterFormModal";
+import { useExecuteAdminActionMutation } from "../../services/adminApi";
+import { useLazyFetchStudyDataQuery } from "../../services/sheetApi";
+import { toast } from "sonner";
+import { ProgressStatus } from "../../enums/progress";
 import {
   ChevronLeft,
   BookOpen,
@@ -15,11 +20,21 @@ import {
   Link as LinkIcon,
   Target,
   CheckCircle2,
+  Plus,
+  Filter
 } from "lucide-react";
 
 export const SubjectPage: React.FC = () => {
   const { subjectId } = useParams<{ readonly subjectId: string }>();
   const subjects = useStudyStore((state) => state.subjects);
+  const setSubjects = useStudyStore((state) => state.setSubjects);
+
+  const [executeAdminAction, { isLoading }] = useExecuteAdminActionMutation();
+  const [triggerFetch] = useLazyFetchStudyDataQuery();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNode, setEditingNode] = useState<any | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
 
   const subject = subjects.find((s) => s.id === subjectId);
 
@@ -43,6 +58,42 @@ export const SubjectPage: React.FC = () => {
 
   const stats = calculateProgress(subject);
 
+  const sortedLinks = subject.links ? [...subject.links].sort((a, b) => {
+    const nameA = a.sourceName?.toLowerCase() || "";
+    const nameB = b.sourceName?.toLowerCase() || "";
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  }) : [];
+
+  const handleCreateChapter = () => {
+    setEditingNode(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditChapter = (node: any) => {
+    setEditingNode(node);
+    setIsModalOpen(true);
+  };
+
+  const onSave = async (payload: any) => {
+    const action = editingNode ? "UPDATE" : "CREATE";
+    try {
+      await executeAdminAction({
+        action,
+        payload
+      }).unwrap();
+      
+      toast.success(`Chapter ${action === "CREATE" ? "created" : "updated"} successfully!`);
+      setIsModalOpen(false);
+      
+      const data = await triggerFetch().unwrap();
+      if (data) setSubjects(data);
+    } catch (e) {
+      toast.error(`Failed to ${action.toLowerCase()} chapter.`);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -55,12 +106,35 @@ export const SubjectPage: React.FC = () => {
             <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">
+          <h1 className="text-3xl font-extrabold tracking-tight text-text-primary break-words whitespace-normal">
             {subject.name}
           </h1>
           <p className="text-text-secondary text-sm">
             Recursive tree hierarchy breakdown and progress tracking.
           </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-bg-surface border border-border-subtle rounded-lg px-3 py-2">
+            <Filter className="h-4 w-4 text-text-muted" />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-transparent text-sm text-text-primary focus:outline-none"
+            >
+              <option value="ALL">All Status</option>
+              <option value={ProgressStatus.COMPLETED}>Completed</option>
+              <option value={ProgressStatus.IN_PROGRESS}>In Progress</option>
+              <option value={ProgressStatus.NOT_STARTED}>Not Started</option>
+            </select>
+          </div>
+          <button
+            onClick={handleCreateChapter}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-text-primary rounded-lg font-medium hover:bg-primary-hover transition-colors shadow-md disabled:opacity-50 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            Add Chapter
+          </button>
         </div>
       </div>
 
@@ -78,6 +152,13 @@ export const SubjectPage: React.FC = () => {
               <span>{stats.completed}</span> completed out of{" "}
               <span>{stats.total}</span> leaf chapters.
             </div>
+            {subject.preliMarks && (
+               <div className="mt-1">
+                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-status-progress border border-primary/20">
+                    Preli Marks: {subject.preliMarks}
+                 </span>
+               </div>
+            )}
           </div>
         </div>
 
@@ -103,7 +184,13 @@ export const SubjectPage: React.FC = () => {
         </h3>
         <div className="space-y-2 max-w-full overflow-x-auto">
           {subject.children.map((child) => (
-            <TreeNode key={child.id} node={child} subjectId={subject.id} />
+            <TreeNode 
+              key={child.id} 
+              node={child} 
+              subjectId={subject.id} 
+              onEdit={handleEditChapter}
+              filterStatus={filterStatus}
+            />
           ))}
         </div>
       </Card>
@@ -173,7 +260,7 @@ export const SubjectPage: React.FC = () => {
                       <span className="text-xs text-text-muted block mb-1">
                         Comments
                       </span>
-                      <p className="text-sm text-text-secondary leading-relaxed">
+                      <p className="text-sm text-text-secondary leading-relaxed break-words whitespace-normal">
                         {subject.comments}
                       </p>
                     </div>
@@ -186,10 +273,10 @@ export const SubjectPage: React.FC = () => {
       )}
 
       {/* Links Section */}
-      {subject.links && subject.links.length > 0 && (
+      {sortedLinks && sortedLinks.length > 0 && (
         <div>
           {/* Links Card */}
-          {subject.links && subject.links.length > 0 && (
+          {sortedLinks && sortedLinks.length > 0 && (
             <Card className="p-6 flex flex-col h-full">
               <div className="flex items-center gap-2 mb-4 border-b border-border-subtle pb-3">
                 <LinkIcon className="h-5 w-5 text-primary" />
@@ -198,7 +285,7 @@ export const SubjectPage: React.FC = () => {
                 </h3>
               </div>
               <div className="space-y-3 flex-1 overflow-y-auto">
-                {subject.links.map((link, idx) => (
+                {sortedLinks.map((link, idx) => (
                   <a
                     key={idx}
                     href={link.link}
@@ -207,10 +294,10 @@ export const SubjectPage: React.FC = () => {
                     className="flex items-center justify-between p-3 rounded-lg border border-border-subtle bg-bg-surface hover:bg-bg-surface-hover hover:border-primary/30 transition-all group"
                   >
                     <div className="flex flex-col overflow-hidden mr-3">
-                      <span className="text-sm font-semibold text-text-primary truncate group-hover:text-primary transition-colors">
+                      <span className="text-sm font-semibold text-text-primary break-words whitespace-normal group-hover:text-primary transition-colors">
                         {link.title}
                       </span>
-                      <span className="text-xs text-text-muted truncate mt-0.5">
+                      <span className="text-xs text-text-muted break-words whitespace-normal mt-0.5">
                         Source: {link.sourceName}
                       </span>
                     </div>
@@ -221,6 +308,16 @@ export const SubjectPage: React.FC = () => {
             </Card>
           )}
         </div>
+      )}
+
+      {isModalOpen && (
+        <ChapterFormModal
+          initialData={editingNode}
+          parentId={subject.id}
+          onClose={() => setIsModalOpen(false)}
+          onSave={onSave}
+          isSaving={isLoading}
+        />
       )}
     </div>
   );
