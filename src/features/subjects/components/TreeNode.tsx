@@ -62,6 +62,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
       const status = (node as any).status;
       if (status === ProgressStatus.COMPLETED) return "text-status-completed";
       if (status === ProgressStatus.IN_PROGRESS) return "text-status-progress";
+      if (status === ProgressStatus.OVERDUE) return "text-red-500";
       return "text-status-notstarted";
     }
   };
@@ -139,6 +140,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           {node.comments && (
             <div className="text-xs text-text-muted mt-1 ml-[34px] italic break-words whitespace-normal opacity-80">
               {node.comments}
+            </div>
+          )}
+          {((node as any).startedDate || (node as any).targetToCompleteDate || (node as any).completedDate) && (
+            <div className="flex flex-wrap gap-3 mt-1.5 ml-[34px] text-[10px] font-medium">
+              {(node as any).startedDate && <span className="text-text-muted">Started: {(node as any).startedDate}</span>}
+              {(node as any).targetToCompleteDate && <span className="text-yellow-500">Target: {(node as any).targetToCompleteDate}</span>}
+              {(node as any).completedDate && <span className="text-status-completed">Completed: {(node as any).completedDate}</span>}
             </div>
           )}
           {node.links && node.links.length > 0 && (

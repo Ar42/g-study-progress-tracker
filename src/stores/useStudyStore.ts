@@ -30,10 +30,39 @@ function updateNodeInTree(nodes: readonly StudyNode[], nodeId: string, status: P
   });
 }
 
+// Helper function to dynamically calculate and update overdue status
+function applyAutoStatusToNodes(nodes: readonly StudyNode[], todayStr: string): readonly StudyNode[] {
+  return nodes.map(node => {
+    if ("children" in node && Array.isArray(node.children)) {
+      return {
+        ...node,
+        children: applyAutoStatusToNodes(node.children, todayStr)
+      };
+    } else {
+      let status = (node as any).status;
+      const targetDateStr = (node as any).targetToCompleteDate;
+      if (status === ProgressStatus.IN_PROGRESS && targetDateStr) {
+        if (todayStr > targetDateStr) {
+          status = ProgressStatus.OVERDUE;
+        }
+      }
+      return {
+        ...node,
+        status
+      } as StudyNode;
+    }
+  });
+}
+
 export const useStudyStore = create<StudyStore>((set) => ({
   subjects: [],
   setSubjects: (subjects) => {
-    set({ subjects });
+    const todayStr = new Date().toISOString().split("T")[0];
+    const updatedSubjects = subjects.map(subj => ({
+      ...subj,
+      children: applyAutoStatusToNodes(subj.children, todayStr)
+    }));
+    set({ subjects: updatedSubjects });
   },
   updateLeafStatus: (subjectId: string, nodeId: string, status: ProgressStatus) => {
     set((state) => ({

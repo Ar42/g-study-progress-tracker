@@ -1,4 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lilita+One&family=Russo+One&display=swap");
+/* Font Imports - Uncomment ONE font URL and matching --font-sans at a time */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Lilita+One&family=Russo+One&display=swap");
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lilita+One&family=Russo+One&display=swap"); */
+/* @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Lilita+One&family=Russo+One&display=swap"); */
 @import "tailwindcss";
 
 /* Palette Imports - Uncomment ONE at a time to apply theme globally */
@@ -9,7 +12,9 @@
 /* @import "./styles/palettes/crimson-abyss.css"; */
 
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
+  /* --font-sans: "Inter", system-ui, -apple-system, sans-serif; */
+  /* --font-sans: "Roboto", system-ui, -apple-system, sans-serif; */
   --font-numbers: "Russo One", "Lilita One", system-ui, sans-serif;
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);

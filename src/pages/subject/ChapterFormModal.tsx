@@ -7,6 +7,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { X, Plus, Trash2 } from "lucide-react";
 import { ProgressStatus } from "../../enums/progress";
 
+const CLOSE_ON_ESCAPE = true;
+const CLOSE_ON_OUTSIDE_CLICK = false;
+
 const linkSchema = z.object({
   title: z.string().optional(),
   link: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
@@ -56,6 +59,8 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
     control,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors }
   } = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
@@ -93,6 +98,15 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
     }
   }, [initialData, reset]);
 
+  useEffect(() => {
+    if (!CLOSE_ON_ESCAPE) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const formatDate = (date?: Date | null) => {
     if (!date) return "";
     return date.toISOString().split("T")[0]; // YYYY-MM-DD format
@@ -120,7 +134,12 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         onClick={(e) => {
+           if (CLOSE_ON_OUTSIDE_CLICK && e.target === e.currentTarget) {
+             onClose();
+           }
+         }}>
       <div className="bg-bg-base border border-border-subtle rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-border-subtle sticky top-0 bg-bg-base z-10">
           <h2 className="text-xl font-bold text-text-primary">
@@ -152,6 +171,7 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
               <label className="text-xs font-semibold text-text-secondary">Name *</label>
               <input
                 {...register("name")}
+                autoFocus={!initialData}
                 className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
               />
               {errors.name && <p className="text-[10px] text-red-400">{errors.name.message}</p>}
@@ -178,62 +198,73 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
               />
             </div> */}
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Started Date</label>
-              <Controller
-                control={control}
-                name="startedDate"
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value}
-                    onChange={(date: Date | null) => field.onChange(date)}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
-                    placeholderText="Select date..."
-                    isClearable
-                  />
-                )}
-              />
-            </div>
+          </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Target Date</label>
-              <Controller
-                control={control}
-                name="targetToCompleteDate"
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value}
-                    onChange={(date: Date | null) => field.onChange(date)}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
-                    placeholderText="Select date..."
-                    isClearable
-                  />
-                )}
-              />
-            </div>
+          <div className="pt-4 pb-2 border-t border-border-subtle mt-4">
+            <h3 className="text-sm font-bold text-text-primary mb-5">Timeline</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-text-secondary block">Started Date</label>
+                <Controller
+                  control={control}
+                  name="startedDate"
+                  render={({ field }) => (
+                    <DatePicker
+                      selected={field.value}
+                      onChange={(date: Date | null) => {
+                        field.onChange(date);
+                        if (date && !getValues("targetToCompleteDate")) {
+                          setValue("targetToCompleteDate", date, { shouldValidate: true, shouldDirty: true });
+                        }
+                      }}
+                      dateFormat="yyyy-MM-dd"
+                      className="w-full bg-bg-surface border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary"
+                      placeholderText="Select date..."
+                      isClearable
+                    />
+                  )}
+                />
+              </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Completed Date</label>
-              <Controller
-                control={control}
-                name="completedDate"
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value}
-                    onChange={(date: Date | null) => field.onChange(date)}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
-                    placeholderText="Select date..."
-                    isClearable
-                  />
-                )}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-text-secondary block">Target Date</label>
+                <Controller
+                  control={control}
+                  name="targetToCompleteDate"
+                  render={({ field }) => (
+                    <DatePicker
+                      selected={field.value}
+                      onChange={(date: Date | null) => field.onChange(date)}
+                      dateFormat="yyyy-MM-dd"
+                      className="w-full bg-bg-surface border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary"
+                      placeholderText="Select date..."
+                      isClearable
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-text-secondary block">Completed Date</label>
+                <Controller
+                  control={control}
+                  name="completedDate"
+                  render={({ field }) => (
+                    <DatePicker
+                      selected={field.value}
+                      onChange={(date: Date | null) => field.onChange(date)}
+                      dateFormat="yyyy-MM-dd"
+                      className="w-full bg-bg-surface border border-border-subtle rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary"
+                      placeholderText="Select date..."
+                      isClearable
+                    />
+                  )}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 mt-4">
             <label className="text-xs font-semibold text-text-secondary">Comments</label>
             <textarea
               {...register("comments")}

@@ -14,12 +14,6 @@ import {
   ChevronLeft,
   BookOpen,
   AlertTriangle,
-  Calendar,
-  MessageSquare,
-  ExternalLink,
-  Link as LinkIcon,
-  Target,
-  CheckCircle2,
   Plus,
   Filter
 } from "lucide-react";
@@ -57,14 +51,6 @@ export const SubjectPage: React.FC = () => {
   }
 
   const stats = calculateProgress(subject);
-
-  const sortedLinks = subject.links ? [...subject.links].sort((a, b) => {
-    const nameA = a.sourceName?.toLowerCase() || "";
-    const nameB = b.sourceName?.toLowerCase() || "";
-    if (nameA < nameB) return -1;
-    if (nameA > nameB) return 1;
-    return 0;
-  }) : [];
 
   const handleCreateChapter = () => {
     setEditingNode(null);
@@ -124,6 +110,7 @@ export const SubjectPage: React.FC = () => {
               <option value="ALL" className="bg-bg-surface text-text-primary">All Status</option>
               <option value={ProgressStatus.COMPLETED} className="bg-bg-surface text-text-primary">Completed</option>
               <option value={ProgressStatus.IN_PROGRESS} className="bg-bg-surface text-text-primary">In Progress</option>
+              <option value={ProgressStatus.OVERDUE} className="bg-bg-surface text-text-primary">Overdue</option>
               <option value={ProgressStatus.NOT_STARTED} className="bg-bg-surface text-text-primary">Not Started</option>
             </select>
             {filterStatus !== "ALL" && (
@@ -199,121 +186,6 @@ export const SubjectPage: React.FC = () => {
           ))}
         </div>
       </Card>
-
-      {/* Details Section */}
-      {(subject.comments ||
-        subject.startedDate ||
-        subject.targetToCompleteDate ||
-        subject.completedDate) && (
-        <div>
-          {/* Details Card */}
-          {(subject.comments ||
-            subject.startedDate ||
-            subject.targetToCompleteDate ||
-            subject.completedDate) && (
-            <Card className="p-4 sm:p-6 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-4 border-b border-border-subtle pb-3">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-lg text-text-primary">
-                  Subject Details
-                </h3>
-              </div>
-              <div className="space-y-4 flex-1">
-                {subject.startedDate && (
-                  <div className="flex items-start gap-3">
-                    <Calendar className="h-4 w-4 text-text-muted mt-0.5" />
-                    <div>
-                      <span className="text-xs text-text-muted block">
-                        Started Date
-                      </span>
-                      <span className="text-sm font-medium text-text-primary">
-                        {subject.startedDate}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {subject.targetToCompleteDate && (
-                  <div className="flex items-start gap-3">
-                    <Target className="h-4 w-4 text-status-progress mt-0.5" />
-                    <div>
-                      <span className="text-xs text-text-muted block">
-                        Target to Complete
-                      </span>
-                      <span className="text-sm font-medium text-text-primary">
-                        {subject.targetToCompleteDate}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {subject.completedDate && (
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-status-completed mt-0.5" />
-                    <div>
-                      <span className="text-xs text-text-muted block">
-                        Completed Date
-                      </span>
-                      <span className="text-sm font-medium text-text-primary">
-                        {subject.completedDate}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {subject.comments && (
-                  <div className="flex items-start gap-3 bg-bg-surface-hover p-3 rounded-lg border border-border-subtle">
-                    <MessageSquare className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="text-xs text-text-muted block mb-1">
-                        Comments
-                      </span>
-                      <p className="text-sm text-text-secondary leading-relaxed break-words whitespace-normal">
-                        {subject.comments}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Links Section */}
-      {sortedLinks && sortedLinks.length > 0 && (
-        <div>
-          {/* Links Card */}
-          {sortedLinks && sortedLinks.length > 0 && (
-            <Card className="p-4 sm:p-6 flex flex-col h-full">
-              <div className="flex items-center gap-2 mb-4 border-b border-border-subtle pb-3">
-                <LinkIcon className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-lg text-text-primary">
-                  Resources & Links
-                </h3>
-              </div>
-              <div className="space-y-3 flex-1 overflow-y-auto">
-                {sortedLinks.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg border border-border-subtle bg-bg-surface hover:bg-bg-surface-hover hover:border-primary/30 transition-all group"
-                  >
-                    <div className="flex flex-col overflow-hidden mr-3">
-                      <span className="text-sm font-semibold text-text-primary break-words whitespace-normal group-hover:text-primary transition-colors">
-                        {link.title}
-                      </span>
-                      <span className="text-xs text-text-muted break-words whitespace-normal mt-0.5">
-                        Source: {link.sourceName}
-                      </span>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-text-muted group-hover:text-primary transition-colors flex-shrink-0" />
-                  </a>
-                ))}
-              </div>
-            </Card>
-          )}
-        </div>
-      )}
 
       {isModalOpen && (
         <ChapterFormModal

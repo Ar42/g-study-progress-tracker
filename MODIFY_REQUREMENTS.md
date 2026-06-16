@@ -1,104 +1,168 @@
-# MODIFY REQUIREMENTS UPDATE
+# Study Dashboard - Improvements & Modifications
 
-## Chapter Hierarchy
+## General
 
-- The edit icon must always be visible.
-- Remove hover-only behavior for edit actions.
-- Edit controls should be permanently accessible in the UI.
-
----
-
-## Admin Panel Removal
-
-- Completely remove the Admin Panel from the menu/navigation.
-- Delete all related routes, components, and logic.
-- Ensure no unused or orphaned code remains in the project.
+- Improve the overall UI/UX while keeping responsiveness in mind across the entire application.
+- Replace the current font with a better-looking font for general text.
+- **Do not change the font currently used for numbers**; it looks good and should remain unchanged.
 
 ---
 
-## Reports Module (NEW FEATURE)
+# Dashboard Page
 
-Introduce a new **Reports section**:
+## 1. Welcome Section
 
-- Show bar charts for **individual subject completion**
-- Each bar represents a subject's completion percentage
-- Use a clean charting library (e.g., Recharts or equivalent)
-- Data should be aggregated per subject
+Below the **"Welcome to your Study Dashboard"** section, add two new status sections.
 
----
+### A. Overdue Chapters (better naming)
 
-## Dashboard – Completion Logic Fix
+> Suggest a better name than **"Failed to complete"** (e.g. **Overdue**, **Missed Deadline**, **Past Due**, etc.)
 
-### Current Issue:
+- Red-themed UI.
+- Display chapters whose target date has already passed but are still incomplete.
+- This section should appear **before** the "In Progress" section.
+- Organize chapters in the same subject → chapter hierarchy/tree structure.
+- Users can mark chapters as completed.
+- Completion must require a confirmation modal.
 
-- Completion is incorrectly calculated as:
-  - Average of completed chapters / total chapters
+### B. In Progress
 
-### Required Fix:
+- Yellow-themed UI.
+- Show all chapters currently being studied.
+- Organize them using the same subject → chapter hierarchy/tree structure.
+- Users can mark chapters as completed.
+- Completion must require a confirmation modal.
 
-- Completion must be based on **individual modules**
-- Correct formula:
-  - (Completed modules / Total modules) \* 100
+### UI/UX
 
-- Each module must contribute equally to the final percentage
-
----
-
-## Exam Countdown Timer (NEW FEATURE)
-
-Add an **exam countdown timer** on the dashboard:
-
-- Format:
-  - `101 days 5 hours 10 minutes 47 seconds`
-- Calculation:
-  - Current time → Exam date at **12:00 AM**
-- Should update in real-time (live ticking)
-- Must be clearly visible in dashboard header or top section
+- Both sections should have an animated border (running/glowing/moving effect).
+- Keep the animation subtle and professional.
+- Prioritize a clean, modern UX.
 
 ---
 
-## UI / Theme Improvements
+## 2. Your Subjects Cards
 
-### Remove Current Red Theme Issues
+Currently:
 
-- Avoid harsh red colors completely
-- Remove high-contrast red text styles
-- Replace with:
-  - Soft muted red tones
-  - Redish-white background variations where needed
-- Reduce aggressive visual contrast for error/danger states
+- Normal click should open the subject in the **current tab**.
+- **Ctrl + Click** should open the subject in a **new browser tab** (currently not working).
 
 ---
 
-## New Color System
+# Subject Details Page
 
-Introduce a **green-based UI theme palette**:
+Currently there are separate sections like:
 
-- Primary: Green tones (modern, clean, calm)
-- Success: Green shades
-- Warning: Soft amber (optional)
-- Error: Muted soft red (not bright red)
-- Background: Light neutral / soft gray
-- UI should feel smooth and easy on the eyes
+- Resources & Links
+- Comments
+- Others
 
----
+These should be removed.
 
-## Card UI Upgrade (IMPORTANT)
+Instead:
 
-- Improve dashboard cards with a modern UI design
-- Replace basic cards with:
-  - Soft shadows
-  - Subtle gradients (green-based theme)
-  - Better spacing and rounded corners
-  - Slight hover lift effect
-- Make cards feel more premium and interactive
-- Maintain performance and simplicity (no over-design)
+Under the **Chapter Hierarchy**, each chapter should display its own:
+
+- Resources & Links
+- Comments
+- Other information
+
+This information should live directly beneath its corresponding chapter instead of being displayed in separate page-level sections.
 
 ---
 
-## General UI Goal
+## Filters
 
-- Make UI more modern and consistent
-- Reduce visual noise
-- Improve readability and spacing
-- Ensure a calm, eye-friendly design system
+Add a new filter for the new status:
+
+- Use the same name chosen for **"Failed to complete"** so terminology stays consistent throughout the app.
+
+---
+
+# Add/Edit Chapter Modal
+
+## Closing Behavior
+
+Make these behaviors configurable using constants so they can easily be changed later.
+
+Current desired behavior:
+
+- ✅ Close on **Escape** key.
+- ❌ Do NOT close on outside click.
+
+---
+
+## Focus
+
+When **adding** a new chapter (not editing):
+
+- Automatically focus the **Chapter Name** input.
+- This should happen only initially.
+- If the user interacts with another field, do not steal focus back.
+
+---
+
+## Date Logic
+
+### Target Date Auto-fill
+
+When selecting a **Start Date**:
+
+- If **Target Date** is empty, automatically set it to the same date.
+- If a Target Date already exists, do nothing.
+
+---
+
+### Date Layout
+
+Improve spacing between:
+
+- Date level labels
+- Date inputs
+
+The current layout feels too cramped.
+
+---
+
+### Automatic Status Update
+
+If:
+
+- Current date > Target Date
+- AND chapter is still marked as **In Progress**
+
+Automatically change its status to the new "Failed to complete" status (using the final chosen name).
+
+Example:
+
+- Target Date = June 18
+- Today = June 19
+- Status = In Progress
+
+↓
+
+Automatically becomes:
+
+- Status = Overdue (or whatever final name is selected)
+
+This business rule should happen automatically.
+
+---
+
+# Responsiveness
+
+While implementing every feature:
+
+- Keep responsiveness in mind.
+- Ensure layouts work well on desktop, tablet, and mobile.
+- Avoid UI breaking at smaller screen sizes.
+
+---
+
+# Notes
+
+- Keep the UX polished and intuitive.
+- Maintain consistency with the existing design system.
+- Prefer reusable components and configurable behavior where possible.
+- Follow existing project architecture and coding conventions.
