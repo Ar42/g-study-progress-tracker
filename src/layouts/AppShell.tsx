@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, RefreshCw } from "lucide-react";
 import { clsx } from "clsx";
@@ -19,7 +19,7 @@ export const AppShell: React.FC = () => {
         setSubjects(data);
         toast.success("Data synced successfully from Google Sheets!");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to sync data from Google Sheets.");
     }
   };
@@ -28,14 +28,18 @@ export const AppShell: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-bg-base text-text-primary">
       {/* Mobile Top Navbar */}
       <header className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-bg-surface backdrop-blur-md sticky top-0 z-20">
-        <div className="flex items-center gap-3">
+        <Link
+          to="/"
+          className="flex items-center gap-3"
+          onClick={() => setIsSidebarOpen(false)}
+        >
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
             <span className="font-bold text-text-primary text-lg">G</span>
           </div>
           <span className="font-bold text-base tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
-            StudyTracker
+            G Study Tracker
           </span>
-        </div>
+        </Link>
         <button
           onClick={() => setIsSidebarOpen(true)}
           className="p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
@@ -47,7 +51,10 @@ export const AppShell: React.FC = () => {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+        />
 
         {/* Content Area */}
         <main className="flex-1 lg:pl-64 min-w-0 transition-all duration-300">

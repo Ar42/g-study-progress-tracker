@@ -1,11 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { clsx } from "clsx";
-import {
-  LayoutDashboard,
-  FileSpreadsheet,
-  X,
-} from "lucide-react";
+import { LayoutDashboard, FileSpreadsheet, X } from "lucide-react";
 
 interface SidebarProps {
   readonly isOpen: boolean;
@@ -40,7 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <span className="font-bold text-text-primary text-xl">G</span>
           </div>
           <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
-            StudyTracker
+            G Study Tracker
           </span>
         </Link>
         <button

@@ -4,7 +4,13 @@ import { useStudyStore } from "../../stores/useStudyStore";
 import { calculateProgress } from "../../utils/progress";
 import { Card } from "../../components/ui/Card";
 import { ProgressCircle } from "../../components/ui/ProgressCircle";
-import { BookOpen, Award, CheckCircle, Timer, AlertTriangle } from "lucide-react";
+import {
+  BookOpen,
+  Award,
+  CheckCircle,
+  Timer,
+  AlertTriangle,
+} from "lucide-react";
 import { intervalToDuration, formatDuration } from "date-fns";
 import { ProgressStatus } from "../../enums/progress";
 import { TreeNode } from "../../features/subjects/components/TreeNode";
@@ -23,7 +29,11 @@ export const DashboardPage: React.FC = () => {
       const now = new Date();
       if (EXAM_DATE.getTime() - now.getTime() > 0) {
         const duration = intervalToDuration({ start: now, end: EXAM_DATE });
-        setTimeLeft(formatDuration(duration, { format: ['years', 'months', 'weeks', 'days', 'hours', 'minutes'] }) || "0 minutes");
+        setTimeLeft(
+          formatDuration(duration, {
+            format: ["years", "months", "weeks", "days", "hours", "minutes"],
+          }) || "0 minutes",
+        );
       } else {
         setTimeLeft("Exam day is here!");
       }
@@ -34,41 +44,79 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   const updateLeafStatus = useStudyStore((state) => state.updateLeafStatus);
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; subjectId?: string; nodeId?: string; nodeName?: string }>({ isOpen: false });
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    subjectId?: string;
+    nodeId?: string;
+    nodeName?: string;
+  }>({ isOpen: false });
 
-  function filterTreeByStatus(nodes: readonly any[], statusToKeep: ProgressStatus, subjectId: string): any[] {
-    return nodes.map(node => {
-      if ("children" in node && Array.isArray(node.children)) {
-         const filteredChildren = filterTreeByStatus(node.children, statusToKeep, subjectId);
-         if (filteredChildren.length > 0) {
+  function filterTreeByStatus(
+    nodes: readonly any[],
+    statusToKeep: ProgressStatus,
+    subjectId: string,
+  ): any[] {
+    return nodes
+      .map((node) => {
+        if ("children" in node && Array.isArray(node.children)) {
+          const filteredChildren = filterTreeByStatus(
+            node.children,
+            statusToKeep,
+            subjectId,
+          );
+          if (filteredChildren.length > 0) {
             return { ...node, children: filteredChildren };
-         }
-         return null;
-      } else {
-         return node.status === statusToKeep ? { ...node, _subjectId: subjectId } : null;
-      }
-    }).filter(Boolean);
+          }
+          return null;
+        } else {
+          return node.status === statusToKeep
+            ? { ...node, _subjectId: subjectId }
+            : null;
+        }
+      })
+      .filter(Boolean);
   }
 
-  const overdueSubjects = subjects.map(subj => {
-    const filtered = filterTreeByStatus(subj.children, ProgressStatus.OVERDUE, subj.id);
-    return filtered.length > 0 ? { ...subj, children: filtered } : null;
-  }).filter(Boolean);
+  const overdueSubjects = subjects
+    .map((subj) => {
+      const filtered = filterTreeByStatus(
+        subj.children,
+        ProgressStatus.OVERDUE,
+        subj.id,
+      );
+      return filtered.length > 0 ? { ...subj, children: filtered } : null;
+    })
+    .filter(Boolean);
 
-  const inProgressSubjects = subjects.map(subj => {
-    const filtered = filterTreeByStatus(subj.children, ProgressStatus.IN_PROGRESS, subj.id);
-    return filtered.length > 0 ? { ...subj, children: filtered } : null;
-  }).filter(Boolean);
+  const inProgressSubjects = subjects
+    .map((subj) => {
+      const filtered = filterTreeByStatus(
+        subj.children,
+        ProgressStatus.IN_PROGRESS,
+        subj.id,
+      );
+      return filtered.length > 0 ? { ...subj, children: filtered } : null;
+    })
+    .filter(Boolean);
 
   const handleNodeClick = (node: any) => {
     if (!("children" in node)) {
-      setConfirmModal({ isOpen: true, subjectId: node._subjectId, nodeId: node.id, nodeName: node.name });
+      setConfirmModal({
+        isOpen: true,
+        subjectId: node._subjectId,
+        nodeId: node.id,
+        nodeName: node.name,
+      });
     }
   };
 
   const confirmCompletion = () => {
     if (confirmModal.subjectId && confirmModal.nodeId) {
-      updateLeafStatus(confirmModal.subjectId, confirmModal.nodeId, ProgressStatus.COMPLETED);
+      updateLeafStatus(
+        confirmModal.subjectId,
+        confirmModal.nodeId,
+        ProgressStatus.COMPLETED,
+      );
     }
     setConfirmModal({ isOpen: false });
   };
@@ -128,9 +176,17 @@ export const DashboardPage: React.FC = () => {
           <div className="space-y-4">
             {overdueSubjects.map((subj: any) => (
               <div key={subj.id} className="space-y-2">
-                <h3 className="text-sm font-bold text-text-secondary uppercase">{subj.name}</h3>
+                <h3 className="text-sm font-bold text-text-secondary uppercase">
+                  {subj.name}
+                </h3>
                 {subj.children.map((child: any) => (
-                  <TreeNode key={child.id} node={child} subjectId={subj.id} onEdit={handleNodeClick} filterStatus="ALL" />
+                  <TreeNode
+                    key={child.id}
+                    node={child}
+                    subjectId={subj.id}
+                    onEdit={handleNodeClick}
+                    filterStatus="ALL"
+                  />
                 ))}
               </div>
             ))}
@@ -148,9 +204,17 @@ export const DashboardPage: React.FC = () => {
           <div className="space-y-4">
             {inProgressSubjects.map((subj: any) => (
               <div key={subj.id} className="space-y-2">
-                <h3 className="text-sm font-bold text-text-secondary uppercase">{subj.name}</h3>
+                <h3 className="text-sm font-bold text-text-secondary uppercase">
+                  {subj.name}
+                </h3>
                 {subj.children.map((child: any) => (
-                  <TreeNode key={child.id} node={child} subjectId={subj.id} onEdit={handleNodeClick} filterStatus="ALL" />
+                  <TreeNode
+                    key={child.id}
+                    node={child}
+                    subjectId={subj.id}
+                    onEdit={handleNodeClick}
+                    filterStatus="ALL"
+                  />
                 ))}
               </div>
             ))}
@@ -230,7 +294,7 @@ export const DashboardPage: React.FC = () => {
                 interactive
                 onClick={(e: React.MouseEvent) => {
                   if (e.ctrlKey || e.metaKey) {
-                    window.open(`/subject/${subj.id}`, '_blank');
+                    window.open(`/subject/${subj.id}`, "_blank");
                   } else {
                     navigate(`/subject/${subj.id}`);
                   }
@@ -274,9 +338,15 @@ export const DashboardPage: React.FC = () => {
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-bg-base border border-border-subtle rounded-xl w-full max-w-md p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-text-primary mb-2">Mark as Completed</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-2">
+              Mark as Completed
+            </h3>
             <p className="text-text-secondary text-sm mb-6">
-              Are you sure you want to mark <span className="font-semibold text-text-primary">{confirmModal.nodeName}</span> as completed?
+              Are you sure you want to mark{" "}
+              <span className="font-semibold text-text-primary">
+                {confirmModal.nodeName}
+              </span>{" "}
+              as completed?
             </p>
             <div className="flex justify-end gap-3">
               <button

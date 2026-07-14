@@ -15,8 +15,9 @@ import {
   BookOpen,
   AlertTriangle,
   Plus,
-  Filter
+  Filter,
 } from "lucide-react";
+import type { StudyNode } from "../../types";
 
 export const SubjectPage: React.FC = () => {
   const { subjectId } = useParams<{ readonly subjectId: string }>();
@@ -57,7 +58,7 @@ export const SubjectPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleEditChapter = (node: any) => {
+  const handleEditChapter = (node: StudyNode) => {
     setEditingNode(node);
     setIsModalOpen(true);
   };
@@ -67,12 +68,14 @@ export const SubjectPage: React.FC = () => {
     try {
       await executeAdminAction({
         action,
-        payload
+        payload,
       }).unwrap();
-      
-      toast.success(`Chapter ${action === "CREATE" ? "created" : "updated"} successfully!`);
+
+      toast.success(
+        `Chapter ${action === "CREATE" ? "created" : "updated"} successfully!`,
+      );
       setIsModalOpen(false);
-      
+
       const data = await triggerFetch().unwrap();
       if (data) setSubjects(data);
     } catch (e) {
@@ -107,15 +110,52 @@ export const SubjectPage: React.FC = () => {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="bg-transparent text-sm text-text-primary focus:outline-none appearance-none pr-2"
             >
-              <option value="ALL" className="bg-bg-surface text-text-primary">All Status</option>
-              <option value={ProgressStatus.COMPLETED} className="bg-bg-surface text-text-primary">Completed</option>
-              <option value={ProgressStatus.IN_PROGRESS} className="bg-bg-surface text-text-primary">In Progress</option>
-              <option value={ProgressStatus.OVERDUE} className="bg-bg-surface text-text-primary">Overdue</option>
-              <option value={ProgressStatus.NOT_STARTED} className="bg-bg-surface text-text-primary">Not Started</option>
+              <option value="ALL" className="bg-bg-surface text-text-primary">
+                All Status
+              </option>
+              <option
+                value={ProgressStatus.COMPLETED}
+                className="bg-bg-surface text-text-primary"
+              >
+                Completed
+              </option>
+              <option
+                value={ProgressStatus.IN_PROGRESS}
+                className="bg-bg-surface text-text-primary"
+              >
+                In Progress
+              </option>
+              <option
+                value={ProgressStatus.OVERDUE}
+                className="bg-bg-surface text-text-primary"
+              >
+                Overdue
+              </option>
+              <option
+                value={ProgressStatus.NOT_STARTED}
+                className="bg-bg-surface text-text-primary"
+              >
+                Not Started
+              </option>
             </select>
             {filterStatus !== "ALL" && (
-              <button onClick={() => setFilterStatus("ALL")} className="text-text-muted hover:text-text-primary">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              <button
+                onClick={() => setFilterStatus("ALL")}
+                className="text-text-muted hover:text-text-primary"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  ></path>
+                </svg>
               </button>
             )}
           </div>
@@ -145,11 +185,11 @@ export const SubjectPage: React.FC = () => {
               <span>{stats.total}</span> leaf chapters.
             </div>
             {subject.preliMarks && (
-               <div className="mt-1">
-                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-status-progress border border-primary/20">
-                    Preli Marks: {subject.preliMarks}
-                 </span>
-               </div>
+              <div className="mt-1">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-status-progress border border-primary/20">
+                  Preli Marks: {subject.preliMarks}
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -176,10 +216,10 @@ export const SubjectPage: React.FC = () => {
         </h3>
         <div className="space-y-2 max-w-full overflow-x-auto">
           {subject.children.map((child) => (
-            <TreeNode 
-              key={child.id} 
-              node={child} 
-              subjectId={subject.id} 
+            <TreeNode
+              key={child.id}
+              node={child}
+              subjectId={subject.id}
               onEdit={handleEditChapter}
               filterStatus={filterStatus}
             />
