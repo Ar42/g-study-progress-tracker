@@ -3,6 +3,7 @@ import type { Subject, LinkItem } from "../types";
 import { ProgressStatus } from "../enums/progress";
 
 const SHEET_CSV_URL =
+  import.meta.env.VITE_SHEET_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/16YFBrX2muNuj2NXNDb_YDnlwEJptKEYBnCv0YHiFnuQ/export?format=csv&gid=0";
 
 interface SheetRow {
@@ -165,6 +166,7 @@ export const sheetApi = createApi({
           const baseNode = {
             id: r.id,
             name: r.name,
+            parentId: r.parentId,
             preliMarks: r.preliMarks,
             comments: r.comments,
             startedDate: r.startedDate,

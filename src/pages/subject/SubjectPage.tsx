@@ -63,6 +63,137 @@ export const SubjectPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleStatusToggle = async (node: any, newStatus: ProgressStatus) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    let startedDate = node.startedDate || "";
+    let completedDate = node.completedDate || "";
+
+    if (newStatus === ProgressStatus.COMPLETED) {
+      completedDate = todayStr;
+      if (!startedDate) startedDate = todayStr;
+    } else if (newStatus === ProgressStatus.IN_PROGRESS) {
+      completedDate = "";
+      if (!startedDate) startedDate = todayStr;
+    } else if (newStatus === ProgressStatus.NOT_STARTED) {
+      completedDate = "";
+      startedDate = "";
+    }
+
+    const payload = {
+      id: node.id,
+      name: node.name,
+      is_subject: false,
+      parentId: node.parentId || subject.id,
+      status: newStatus,
+      preliMarks: node.preliMarks ? String(node.preliMarks) : "",
+      comments: node.comments || "",
+      startedDate,
+      targetToCompleteDate: node.targetToCompleteDate || "",
+      completedDate,
+      links: node.links || [],
+    };
+
+    try {
+      await executeAdminAction({
+        action: "UPDATE",
+        payload,
+      }).unwrap();
+
+      toast.success(
+        `Chapter status updated to ${newStatus.replace("_", " ").toLowerCase()}!`,
+      );
+      const data = await triggerFetch().unwrap();
+      if (data) setSubjects(data);
+    } catch {
+      toast.error("Failed to update status on Google Sheet.");
+    }
+  };
+
+  const handleNodeMove = async (draggedId: string, targetId: string) => {
+    const findNode = (nodes: readonly StudyNode[]): StudyNode | null => {
+      for (const n of nodes) {
+        console.log("nodes: ", { draggedId, nodes });
+
+        if (n.id === draggedId) return n;
+        if ("children" in n && Array.isArray(n.children)) {
+          const found = findNode(n.children);
+          console.log("found: ", found);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const draggedNode = findNode(subject.children);
+    if (!draggedNode) return;
+
+    const findTarget = (nodes: readonly StudyNode[]): StudyNode | null => {
+      for (const n of nodes) {
+        if (n.id === targetId) return n;
+        if ("children" in n && Array.isArray(n.children)) {
+          const found = findTarget(n.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const targetNode = findTarget(subject.children);
+    if (!targetNode) return;
+
+    let newParentId = subject.id;
+    const isTargetParent = "children" in targetNode;
+    if (isTargetParent) {
+      newParentId = targetNode.id;
+    } else {
+      newParentId = targetNode.parentId || subject.id;
+    }
+
+    const isDescendant = (parent: StudyNode, childId: string): boolean => {
+      if (!("children" in parent)) return false;
+      for (const c of parent.children) {
+        if (c.id === childId) return true;
+        if (isDescendant(c, childId)) return true;
+      }
+      return false;
+    };
+
+    if (
+      draggedNode.id === newParentId ||
+      isDescendant(draggedNode, newParentId)
+    ) {
+      toast.error("Cannot move a folder into itself or its own subfolders.");
+      return;
+    }
+
+    const payload = {
+      id: draggedNode.id,
+      name: draggedNode.name,
+      is_subject: false,
+      parentId: newParentId,
+      status: (draggedNode as any).status || ProgressStatus.NOT_STARTED,
+      preliMarks: draggedNode.preliMarks ? String(draggedNode.preliMarks) : "",
+      comments: draggedNode.comments || "",
+      startedDate: draggedNode.startedDate || "",
+      targetToCompleteDate: draggedNode.targetToCompleteDate || "",
+      completedDate: draggedNode.completedDate || "",
+      links: draggedNode.links || [],
+    };
+
+    try {
+      await executeAdminAction({
+        action: "UPDATE",
+        payload,
+      }).unwrap();
+
+      toast.success(`Moved "${draggedNode.name}" successfully!`);
+      const data = await triggerFetch().unwrap();
+      if (data) setSubjects(data);
+    } catch {
+      toast.error("Failed to move chapter on Google Sheet.");
+    }
+  };
+
   const onSave = async (payload: any) => {
     const action = editingNode ? "UPDATE" : "CREATE";
     try {
@@ -222,6 +353,8 @@ export const SubjectPage: React.FC = () => {
               subjectId={subject.id}
               onEdit={handleEditChapter}
               filterStatus={filterStatus}
+              onStatusToggle={handleStatusToggle}
+              onNodeMove={handleNodeMove}
             />
           ))}
         </div>

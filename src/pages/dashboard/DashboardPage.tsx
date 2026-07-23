@@ -14,6 +14,10 @@ import {
 import { intervalToDuration, formatDuration } from "date-fns";
 import { ProgressStatus } from "../../enums/progress";
 import { TreeNode } from "../../features/subjects/components/TreeNode";
+import { useExecuteAdminActionMutation } from "../../services/adminApi";
+import { useLazyFetchStudyDataQuery } from "../../services/sheetApi";
+import { toast } from "sonner";
+import { clsx } from "clsx";
 
 export const DashboardPage: React.FC = () => {
   const subjects = useStudyStore((state) => state.subjects);
@@ -43,13 +47,64 @@ export const DashboardPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const [executeAdminAction] = useExecuteAdminActionMutation();
+  const [triggerFetch] = useLazyFetchStudyDataQuery();
+  const setSubjects = useStudyStore((state) => state.setSubjects);
   const updateLeafStatus = useStudyStore((state) => state.updateLeafStatus);
+
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     subjectId?: string;
     nodeId?: string;
     nodeName?: string;
+    node?: any;
   }>({ isOpen: false });
+
+  // Drag and Drop State for Subjects
+  const [draggedSubjectId, setDraggedSubjectId] = useState<string | null>(null);
+  const [dragOverSubjectId, setDragOverSubjectId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedSubjectId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (dragOverSubjectId !== id) {
+      setDragOverSubjectId(id);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverSubjectId(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    setDragOverSubjectId(null);
+    const sourceId = draggedSubjectId;
+    if (sourceId && sourceId !== targetId) {
+      try {
+        await executeAdminAction({
+          action: "SWAP",
+          payload: { id1: sourceId, id2: targetId },
+        }).unwrap();
+        
+        toast.success("Subjects reordered successfully!");
+        const data = await triggerFetch().unwrap();
+        if (data) setSubjects(data);
+      } catch {
+        toast.error("Failed to reorder subjects.");
+      }
+    }
+    setDraggedSubjectId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSubjectId(null);
+    setDragOverSubjectId(null);
+  };
 
   function filterTreeByStatus(
     nodes: readonly any[],
@@ -99,24 +154,56 @@ export const DashboardPage: React.FC = () => {
     })
     .filter(Boolean);
 
-  const handleNodeClick = (node: any) => {
+  const handleNodeClick = (node: any, subjectId: string) => {
     if (!("children" in node)) {
       setConfirmModal({
         isOpen: true,
-        subjectId: node._subjectId,
+        subjectId: subjectId,
         nodeId: node.id,
         nodeName: node.name,
+        node: node,
       });
     }
   };
 
-  const confirmCompletion = () => {
-    if (confirmModal.subjectId && confirmModal.nodeId) {
-      updateLeafStatus(
-        confirmModal.subjectId,
-        confirmModal.nodeId,
-        ProgressStatus.COMPLETED,
-      );
+  const confirmCompletion = async () => {
+    if (confirmModal.subjectId && confirmModal.nodeId && confirmModal.node) {
+      const node = confirmModal.node;
+      const todayStr = new Date().toISOString().split("T")[0];
+      const payload = {
+        id: node.id,
+        name: node.name,
+        is_subject: false,
+        parentId: node.parentId || confirmModal.subjectId,
+        status: ProgressStatus.COMPLETED,
+        preliMarks: node.preliMarks ? String(node.preliMarks) : "",
+        comments: node.comments || "",
+        startedDate: node.startedDate || todayStr,
+        targetToCompleteDate: node.targetToCompleteDate || "",
+        completedDate: todayStr,
+        links: node.links || [],
+      };
+
+      try {
+        await executeAdminAction({
+          action: "UPDATE",
+          payload,
+        }).unwrap();
+
+        toast.success(`Chapter "${node.name}" marked as completed!`);
+        const data = await triggerFetch().unwrap();
+        if (data) setSubjects(data);
+      } catch (err) {
+        toast.error("Failed to update status on Google Sheet.");
+      }
+    } else {
+      if (confirmModal.subjectId && confirmModal.nodeId) {
+        updateLeafStatus(
+          confirmModal.subjectId,
+          confirmModal.nodeId,
+          ProgressStatus.COMPLETED,
+        );
+      }
     }
     setConfirmModal({ isOpen: false });
   };
@@ -287,48 +374,64 @@ export const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {subjects.map((subj) => {
             const stats = calculateProgress(subj);
+            const isDragged = draggedSubjectId === subj.id;
+            const isDragOverThis = dragOverSubjectId === subj.id;
 
             return (
-              <Card
+              <div
                 key={subj.id}
-                interactive
-                onClick={(e: React.MouseEvent) => {
-                  if (e.ctrlKey || e.metaKey) {
-                    window.open(`/subject/${subj.id}`, "_blank");
-                  } else {
-                    navigate(`/subject/${subj.id}`);
-                  }
-                }}
-                className="flex flex-col items-center text-center justify-between h-full gap-5 group p-6 glass-panel-interactive border-t border-t-white/5"
+                draggable
+                onDragStart={(e) => handleDragStart(e, subj.id)}
+                onDragOver={(e) => handleDragOver(e, subj.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, subj.id)}
+                onDragEnd={handleDragEnd}
+                className={clsx(
+                  "transition-all duration-200",
+                  isDragged && "opacity-40 scale-95 border-dashed border-primary",
+                  isDragOverThis && "scale-[1.02] ring-2 ring-primary ring-offset-2 ring-offset-bg-base"
+                )}
               >
-                <div className="space-y-2 w-full">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <h3 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors break-words whitespace-normal w-full text-center">
-                      {subj.name}
-                    </h3>
-                    {subj.preliMarks && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 font-numbers">
-                        Preli Marks: {subj.preliMarks}
-                      </span>
-                    )}
+                <Card
+                  interactive
+                  onClick={(e: React.MouseEvent) => {
+                    if (e.ctrlKey || e.metaKey) {
+                      window.open(`/subject/${subj.id}`, "_blank");
+                    } else {
+                      navigate(`/subject/${subj.id}`);
+                    }
+                  }}
+                  className="flex flex-col items-center text-center justify-between h-full gap-5 group p-6 glass-panel-interactive border-t border-t-white/5 cursor-grab active:cursor-grabbing w-full"
+                >
+                  <div className="space-y-2 w-full">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <h3 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors break-words whitespace-normal w-full text-center">
+                        {subj.name}
+                      </h3>
+                      {subj.preliMarks && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 font-numbers">
+                          Preli Marks: {subj.preliMarks}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-muted mt-1 font-numbers">
+                      {stats.completed} / {stats.total} Leaf Chapters
+                    </p>
                   </div>
-                  <p className="text-xs text-text-muted mt-1 font-numbers">
-                    {stats.completed} / {stats.total} Leaf Chapters
-                  </p>
-                </div>
 
-                <div className="py-2">
-                  <ProgressCircle
-                    percentage={stats.percentage}
-                    size={110}
-                    strokeWidth={9}
-                  />
-                </div>
+                  <div className="py-2">
+                    <ProgressCircle
+                      percentage={stats.percentage}
+                      size={110}
+                      strokeWidth={9}
+                    />
+                  </div>
 
-                <span className="text-xs font-medium text-primary bg-primary/5 border border-primary/15 px-3 py-1 rounded-lg group-hover:bg-primary group-hover:text-text-primary transition-all duration-200">
-                  View Details
-                </span>
-              </Card>
+                  <span className="text-xs font-medium text-primary bg-primary/5 border border-primary/15 px-3 py-1 rounded-lg group-hover:bg-primary group-hover:text-text-primary transition-all duration-200">
+                    View Details
+                  </span>
+                </Card>
+              </div>
             );
           })}
         </div>

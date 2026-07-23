@@ -17,8 +17,10 @@ interface TreeNodeProps {
   readonly node: StudyNode;
   readonly subjectId: string;
   readonly depth?: number;
-  readonly onEdit?: (node: any) => void;
+  readonly onEdit?: (node: any, subjectId: string) => void;
   readonly filterStatus?: string;
+  readonly onStatusToggle?: (node: any, newStatus: ProgressStatus) => void;
+  readonly onNodeMove?: (draggedId: string, targetId: string) => void;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
@@ -27,8 +29,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   depth = 0,
   onEdit,
   filterStatus = "ALL",
+  onStatusToggle,
+  onNodeMove,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const isParent = "children" in node;
   const stats = isParent ? calculateProgress(node) : null;
 
@@ -70,7 +76,34 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const handleTextClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onEdit) {
-      onEdit(node);
+      onEdit(node, subjectId);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData("text/plain", node.id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const draggedId = e.dataTransfer.getData("text/plain");
+    if (draggedId && draggedId !== node.id && onNodeMove) {
+      onNodeMove(draggedId, node.id);
     }
   };
 
@@ -78,11 +111,18 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     <div className="w-full">
       {/* Node Row */}
       <div
+        draggable={true}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         className={clsx(
-          "flex items-center justify-between py-2.5 px-4 my-1.5 rounded-lg border transition-all duration-200 group",
+          "flex items-center justify-between py-2.5 px-4 my-1.5 rounded-lg border transition-all duration-200 group cursor-grab active:cursor-grabbing",
           isParent
             ? "bg-bg-surface/30 border-border-subtle hover:bg-bg-surface/50"
             : "bg-bg-surface/10 border-transparent hover:bg-bg-surface/20",
+          isDragOver && "border-primary bg-primary/10 scale-[1.01]",
         )}
         style={{ marginLeft: `${depth * 16}px` }}
       >
@@ -189,6 +229,54 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               </span>
             </div>
           )}
+
+          {!isParent && onStatusToggle && (
+            <div className="flex items-center gap-2">
+              {/* In Progress Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const currentStatus = (node as any).status;
+                  const newStatus =
+                    currentStatus === ProgressStatus.IN_PROGRESS || currentStatus === ProgressStatus.OVERDUE
+                      ? ProgressStatus.NOT_STARTED
+                      : ProgressStatus.IN_PROGRESS;
+                  onStatusToggle(node, newStatus);
+                }}
+                className={clsx(
+                  "px-2 py-1 text-xs font-semibold rounded transition-all duration-200 cursor-pointer",
+                  ((node as any).status === ProgressStatus.IN_PROGRESS || (node as any).status === ProgressStatus.OVERDUE)
+                    ? "bg-yellow-500 text-black border-2 border-yellow-300 shadow-md shadow-yellow-500/20 font-bold"
+                    : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/25",
+                )}
+                title="Mark as In Progress"
+              >
+                In Progress
+              </button>
+
+              {/* Completed Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const currentStatus = (node as any).status;
+                  const newStatus =
+                    currentStatus === ProgressStatus.COMPLETED
+                      ? ProgressStatus.NOT_STARTED
+                      : ProgressStatus.COMPLETED;
+                  onStatusToggle(node, newStatus);
+                }}
+                className={clsx(
+                  "px-2 py-1 text-xs font-semibold rounded transition-all duration-200 cursor-pointer",
+                  (node as any).status === ProgressStatus.COMPLETED
+                    ? "bg-emerald-500 text-black border-2 border-emerald-300 shadow-md shadow-emerald-500/20 font-bold"
+                    : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25",
+                )}
+                title="Mark as Done"
+              >
+                Done
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -211,6 +299,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 depth={depth + 1}
                 onEdit={onEdit}
                 filterStatus={filterStatus}
+                onStatusToggle={onStatusToggle}
+                onNodeMove={onNodeMove}
               />
             ))}
           </div>

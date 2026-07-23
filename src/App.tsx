@@ -1,13 +1,29 @@
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { useStudyStore } from "./stores/useStudyStore";
 import { AppShell } from "./layouts/AppShell";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { SubjectPage } from "./pages/subject/SubjectPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
+import { LoginPage } from "./pages/login/LoginPage";
 import { useFetchStudyDataQuery } from "./services/sheetApi";
 
+function getCookie(name: string): string | null {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === " ") c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+const ProtectedRoute = () => {
+  const isAuthenticated = getCookie("auth_session") === "true";
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+};
 
 function App() {
   const { data, isLoading, error } = useFetchStudyDataQuery();
@@ -70,15 +86,19 @@ function App() {
     <BrowserRouter>
       <Toaster theme="dark" richColors position="top-right" />
       <Routes>
-        <Route path="/" element={<AppShell />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="subject/:subjectId" element={<SubjectPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<AppShell />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="subject/:subjectId" element={<SubjectPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+          </Route>
         </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
+

@@ -8,6 +8,7 @@ export interface LinkItem {
 
 export interface NodeExtension {
   readonly is_subject?: boolean;
+  readonly parentId?: string;
   readonly preliMarks?: string | number;
   readonly comments?: string;
   readonly startedDate?: string;
