@@ -25,24 +25,28 @@ export const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg-base text-text-primary">
+    <div className="min-h-screen flex flex-col bg-bg-base text-text-primary relative overflow-x-hidden">
+      {/* Background Ambient Glow Orbs */}
+      <div className="fixed top-[-150px] left-1/4 w-[600px] h-[600px] bg-primary/8 rounded-full blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed bottom-[-150px] right-[-100px] w-[500px] h-[500px] bg-secondary/8 rounded-full blur-[140px] pointer-events-none -z-10" />
+
       {/* Mobile Top Navbar */}
-      <header className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-bg-surface backdrop-blur-md sticky top-0 z-20">
+      <header className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-bg-surface/90 backdrop-blur-xl sticky top-0 z-20">
         <Link
           to="/"
           className="flex items-center gap-3"
           onClick={() => setIsSidebarOpen(false)}
         >
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <span className="font-bold text-text-primary text-lg">G</span>
+          <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shadow-md shadow-primary/25">
+            <span className="font-bold text-text-primary text-base">G</span>
           </div>
-          <span className="font-bold text-base tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
+          <span className="font-bold text-base tracking-wide bg-gradient-to-r from-text-primary via-slate-200 to-text-secondary bg-clip-text text-transparent">
             G Study Tracker
           </span>
         </Link>
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
+          className="p-2 rounded-xl border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
@@ -58,7 +62,7 @@ export const AppShell: React.FC = () => {
 
         {/* Content Area */}
         <main className="flex-1 lg:pl-64 min-w-0 transition-all duration-300">
-          <div className="max-w-6xl mx-auto p-4 md:p-8">
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
             <Outlet />
           </div>
         </main>

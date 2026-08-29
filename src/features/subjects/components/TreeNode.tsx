@@ -233,17 +233,17 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         {/* Completion Info & Actions */}
         <div className="flex items-center gap-3 flex-shrink-0 ml-4">
           {isParent && stats && (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="text-xs text-text-muted font-numbers">
                 {stats.completed} / {stats.total}
               </span>
               <span
                 className={clsx(
-                  "text-xs px-2.5 py-0.5 rounded-full font-medium border transition-colors font-numbers",
+                  "text-xs px-2.5 py-0.5 rounded-full font-bold border transition-all duration-200 font-numbers",
                   stats.percentage === 100
-                    ? "bg-status-completed-bg text-status-completed border-status-completed/30"
+                    ? "bg-status-completed-bg text-status-completed border-status-completed/30 shadow-sm shadow-emerald-500/10"
                     : stats.percentage > 0
-                      ? "bg-status-progress-bg text-status-progress border-status-progress/30"
+                      ? "bg-status-progress-bg text-status-progress border-status-progress/30 shadow-sm shadow-amber-500/10"
                       : "bg-status-notstarted-bg text-status-notstarted border-status-notstarted/30",
                 )}
               >
@@ -253,7 +253,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           )}
 
           {!isParent && onStatusToggle && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* In Progress Button */}
               <button
                 onClick={(e) => {
@@ -267,14 +267,15 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                   onStatusToggle(node, newStatus);
                 }}
                 className={clsx(
-                  "px-2 py-1 text-xs font-semibold rounded transition-all duration-200 cursor-pointer",
+                  "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5",
                   (node as any).status === ProgressStatus.IN_PROGRESS ||
                     (node as any).status === ProgressStatus.OVERDUE
-                    ? "bg-yellow-500 text-black border-2 border-yellow-300 shadow-md shadow-yellow-500/20 font-bold"
-                    : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/25",
+                    ? "bg-amber-500 text-black font-bold shadow-md shadow-amber-500/30 border border-amber-400"
+                    : "bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 hover:border-amber-500/40",
                 )}
                 title="Mark as In Progress"
               >
+                <span className={clsx("h-1.5 w-1.5 rounded-full", (node as any).status === ProgressStatus.IN_PROGRESS || (node as any).status === ProgressStatus.OVERDUE ? "bg-black" : "bg-amber-400")} />
                 In Progress
               </button>
 
@@ -290,13 +291,14 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                   onStatusToggle(node, newStatus);
                 }}
                 className={clsx(
-                  "px-2 py-1 text-xs font-semibold rounded transition-all duration-200 cursor-pointer",
+                  "px-2.5 py-1 text-xs font-semibold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5",
                   (node as any).status === ProgressStatus.COMPLETED
-                    ? "bg-emerald-500 text-black border-2 border-emerald-300 shadow-md shadow-emerald-500/20 font-bold"
-                    : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/25",
+                    ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/30 border border-emerald-400"
+                    : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-500/40",
                 )}
                 title="Mark as Done"
               >
+                <span className={clsx("h-1.5 w-1.5 rounded-full", (node as any).status === ProgressStatus.COMPLETED ? "bg-black" : "bg-emerald-400")} />
                 Done
               </button>
             </div>

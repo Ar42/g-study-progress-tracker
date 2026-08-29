@@ -229,9 +229,14 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-bg-surface p-6 md:p-8 border border-border-subtle">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-bg-surface/90 via-bg-surface to-primary/5 p-6 md:p-8 border border-border-subtle shadow-xl backdrop-blur-xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none -z-0" />
         <div className="relative z-10 max-w-xl space-y-3">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-text-primary">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+            Active Study Board
+          </div>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary">
             Welcome to your Study Dashboard
           </h1>
           <p className="text-text-secondary text-sm md:text-base leading-relaxed">
@@ -239,33 +244,43 @@ export const DashboardPage: React.FC = () => {
             calculations computed from leaf nodes.
           </p>
           <div className="pt-2 flex flex-wrap items-center gap-3">
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-primary/15 text-primary border border-primary/25 shadow-sm">
               Overall Progress:{" "}
-              <span className="font-numbers">{overallPercentage}%</span>
+              <span className="font-numbers text-sm">{overallPercentage}%</span>
             </span>
             <span className="text-xs text-text-muted">
-              <span className="font-numbers">{overallPercentage}%</span> from{" "}
-              <span className="font-numbers">{totalModules}</span> modules are
+              <span className="font-numbers text-text-secondary font-bold">{overallPercentage}%</span> from{" "}
+              <span className="font-numbers text-text-secondary font-bold">{totalModules}</span> modules are
               completed
             </span>
           </div>
         </div>
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.03] hidden md:block">
-          <BookOpen className="h-32 w-32 text-primary" />
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.04] hidden md:block">
+          <BookOpen className="h-44 w-44 text-primary" />
         </div>
       </div>
 
       {/* Overdue Section */}
       {overdueSubjects.length > 0 && (
-        <div className="border border-red-500/30 bg-red-500/5 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <h2 className="text-xl font-bold text-red-500">Overdue Chapters</h2>
+        <div className="border border-red-500/30 bg-gradient-to-r from-red-950/20 via-bg-surface/80 to-bg-surface/60 backdrop-blur-xl rounded-2xl p-6 shadow-xl shadow-red-950/20">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-red-500/15 flex items-center justify-center text-red-400 border border-red-500/30">
+                <AlertTriangle className="h-4.5 w-4.5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-red-400">Overdue Chapters</h2>
+                <p className="text-xs text-text-muted">Target dates passed and require immediate completion</p>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/25">
+              Action Required
+            </span>
           </div>
           <div className="space-y-4">
             {overdueSubjects.map((subj: any) => (
               <div key={subj.id} className="space-y-2">
-                <h3 className="text-sm font-bold text-text-secondary uppercase">
+                <h3 className="text-xs font-extrabold text-red-400/80 uppercase tracking-wider">
                   {subj.name}
                 </h3>
                 {subj.children.map((child: any) => (
@@ -285,15 +300,25 @@ export const DashboardPage: React.FC = () => {
 
       {/* In Progress Section */}
       {inProgressSubjects.length > 0 && (
-        <div className="border border-yellow-500/30 bg-yellow-500/5 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Timer className="h-5 w-5 text-yellow-500" />
-            <h2 className="text-xl font-bold text-yellow-500">In Progress</h2>
+        <div className="border border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-bg-surface/80 to-bg-surface/60 backdrop-blur-xl rounded-2xl p-6 shadow-xl shadow-amber-950/20">
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-400 border border-amber-500/30">
+                <Timer className="h-4.5 w-4.5 animate-pulse" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-amber-400">In Progress</h2>
+                <p className="text-xs text-text-muted">Chapters currently being studied</p>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25">
+              In Focus
+            </span>
           </div>
           <div className="space-y-4">
             {inProgressSubjects.map((subj: any) => (
               <div key={subj.id} className="space-y-2">
-                <h3 className="text-sm font-bold text-text-secondary uppercase">
+                <h3 className="text-xs font-extrabold text-amber-400/80 uppercase tracking-wider">
                   {subj.name}
                 </h3>
                 {subj.children.map((child: any) => (
@@ -312,16 +337,16 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* Countdown Timer */}
-      <div className="glass-panel rounded-2xl p-4 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-l-secondary relative overflow-hidden">
+      <div className="glass-panel rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-l-secondary relative overflow-hidden shadow-xl">
         <div className="flex items-center gap-4 z-10">
-          <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary shadow-inner">
+          <div className="h-12 w-12 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary border border-secondary/30 shadow-inner">
             <Timer className="h-6 w-6 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-text-muted uppercase tracking-widest">
+            <h3 className="text-xs font-bold text-text-muted uppercase tracking-widest">
               {COUNT_DOWN_LABEL}
             </h3>
-            <p className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary font-numbers drop-shadow-sm">
+            <p className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary via-indigo-400 to-secondary font-numbers drop-shadow-sm">
               {timeLeft || "Loading..."}
             </p>
           </div>
@@ -329,11 +354,11 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="p-5 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:-translate-y-1 transition-transform">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Card className="p-6 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:-translate-y-1 transition-all duration-300 shadow-xl group">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <Award className="h-6 w-6" />
+            <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center text-primary border border-primary/25 group-hover:scale-110 transition-transform duration-300">
+              <Award className="h-7 w-7" />
             </div>
             <div>
               <p className="text-xs text-text-muted font-bold uppercase tracking-wider">
@@ -346,10 +371,10 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-5 flex items-center justify-between gap-4 border-l-4 border-l-secondary hover:-translate-y-1 transition-transform">
+        <Card className="p-6 flex items-center justify-between gap-4 border-l-4 border-l-secondary hover:-translate-y-1 transition-all duration-300 shadow-xl group">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
-              <CheckCircle className="h-6 w-6" />
+            <div className="h-14 w-14 rounded-2xl bg-secondary/15 flex items-center justify-center text-secondary border border-secondary/25 group-hover:scale-110 transition-transform duration-300">
+              <CheckCircle className="h-7 w-7" />
             </div>
             <div>
               <p className="text-xs text-text-muted font-bold uppercase tracking-wider">
@@ -363,16 +388,25 @@ export const DashboardPage: React.FC = () => {
           <ProgressCircle
             percentage={overallPercentage}
             size={80}
-            strokeWidth={5}
+            strokeWidth={6}
           />
         </Card>
       </div>
 
       {/* Grid of Subject Cards */}
       <div>
-        <h2 className="text-lg font-bold text-text-primary mb-5 tracking-tight">
-          Your Subjects
-        </h2>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-text-primary tracking-tight">
+              Your Subjects
+            </h2>
+            <p className="text-xs text-text-muted">Drag to reorder subjects priority</p>
+          </div>
+          <span className="text-xs font-semibold px-3 py-1 rounded-lg bg-bg-surface border border-border-subtle text-text-secondary">
+            {subjects.length} Active Modules
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {subjects.map((subj) => {
             const stats = calculateProgress(subj);
@@ -405,25 +439,25 @@ export const DashboardPage: React.FC = () => {
                       navigate(`/subject/${subj.id}`);
                     }
                   }}
-                  className="flex flex-col items-center text-center justify-between h-full gap-5 group p-6 glass-panel-interactive border-t border-t-white/5 cursor-grab active:cursor-grabbing w-full"
+                  className="flex flex-col items-center text-center justify-between h-full gap-5 group p-6 glass-panel-interactive border border-border-subtle/80 hover:border-primary/50 cursor-grab active:cursor-grabbing w-full rounded-2xl"
                 >
-                  <div className="space-y-2 w-full">
-                    <div className="flex flex-col items-center gap-1.5">
-                      <h3 className="font-bold text-lg text-text-primary group-hover:text-primary transition-colors break-words whitespace-normal w-full text-center">
+                  <div className="space-y-2.5 w-full">
+                    <div className="flex flex-col items-center gap-2">
+                      <h3 className="font-extrabold text-lg text-text-primary group-hover:text-primary transition-colors break-words whitespace-normal w-full text-center leading-snug">
                         {subj.name}
                       </h3>
                       {subj.preliMarks && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 font-numbers">
-                          Preli Marks: {subj.preliMarks}
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/30 font-numbers">
+                          Preli: {subj.preliMarks} Marks
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-text-muted mt-1 font-numbers">
+                    <p className="text-xs text-text-muted font-numbers">
                       {stats.completed} / {stats.total} Leaf Chapters
                     </p>
                   </div>
 
-                  <div className="py-2">
+                  <div className="py-2 group-hover:scale-105 transition-transform duration-300">
                     <ProgressCircle
                       percentage={stats.percentage}
                       size={110}
@@ -431,8 +465,8 @@ export const DashboardPage: React.FC = () => {
                     />
                   </div>
 
-                  <span className="text-xs font-medium text-primary bg-primary/5 border border-primary/15 px-3 py-1 rounded-lg group-hover:bg-primary group-hover:text-text-primary transition-all duration-200">
-                    View Details
+                  <span className="text-xs font-semibold text-primary bg-primary/10 border border-primary/25 px-3.5 py-1.5 rounded-xl group-hover:bg-primary group-hover:text-text-primary group-hover:shadow-md group-hover:shadow-primary/25 transition-all duration-200">
+                    View Hierarchy
                   </span>
                 </Card>
               </div>
