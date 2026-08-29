@@ -248,12 +248,12 @@ export const SubjectPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-bg-surface/90 border border-border-subtle rounded-xl px-3.5 py-2 backdrop-blur-md shadow-sm">
+          <div className="flex items-center gap-2 bg-bg-surface border border-border-subtle rounded-lg px-3 py-2">
             <Filter className="h-4 w-4 text-text-muted" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="bg-transparent text-sm text-text-primary focus:outline-none appearance-none pr-2 cursor-pointer font-medium"
+              className="bg-transparent text-sm text-text-primary focus:outline-none appearance-none pr-2"
             >
               <option value="ALL" className="bg-bg-surface text-text-primary">
                 All Status
@@ -286,7 +286,7 @@ export const SubjectPage: React.FC = () => {
             {filterStatus !== "ALL" && (
               <button
                 onClick={() => setFilterStatus("ALL")}
-                className="text-text-muted hover:text-text-primary cursor-pointer p-0.5"
+                className="text-text-muted hover:text-text-primary"
               >
                 <svg
                   className="w-4 h-4"
@@ -307,7 +307,7 @@ export const SubjectPage: React.FC = () => {
           <button
             onClick={handleCreateChapter}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-text-primary rounded-xl font-bold hover:bg-primary-hover transition-all duration-200 shadow-lg shadow-primary/25 disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-text-primary rounded-lg font-medium hover:bg-primary-hover transition-colors shadow-md disabled:opacity-50 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Add Chapter
@@ -316,22 +316,22 @@ export const SubjectPage: React.FC = () => {
       </div>
 
       {/* Progress Card */}
-      <Card className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-2xl shadow-xl border-l-4 border-l-primary">
+      <Card className="flex flex-col sm:flex-row items-center justify-between gap-6 p-4 sm:p-6">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center text-primary border border-primary/25 shadow-inner">
-            <BookOpen className="h-7 w-7" />
+          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+            <BookOpen className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="font-extrabold text-xl text-text-primary tracking-tight">
+            <h2 className="font-bold text-lg text-text-primary">
               Progress Breakdown
             </h2>
             <div className="text-sm text-text-secondary mt-0.5">
-              <span className="font-bold text-text-primary font-numbers">{stats.completed}</span> completed out of{" "}
-              <span className="font-bold text-text-primary font-numbers">{stats.total}</span> leaf chapters.
+              <span>{stats.completed}</span> completed out of{" "}
+              <span>{stats.total}</span> leaf chapters.
             </div>
             {subject.preliMarks && (
-              <div className="mt-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/15 text-primary border border-primary/25 font-numbers">
+              <div className="mt-1">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-status-progress border border-primary/20">
                   Preli Marks: {subject.preliMarks}
                 </span>
               </div>
@@ -341,32 +341,24 @@ export const SubjectPage: React.FC = () => {
 
         <div className="flex items-center gap-6">
           <div className="text-right hidden sm:block">
-            <span className="text-3xl font-black text-text-primary block font-numbers">
+            <span className="text-2xl font-black text-text-primary block">
               {stats.percentage}%
             </span>
-            <span className="text-xs text-text-muted font-medium">Total Completion</span>
+            <span className="text-xs text-text-muted">Total Completion</span>
           </div>
           <ProgressCircle
             percentage={stats.percentage}
-            size={90}
+            size={85}
             strokeWidth={7}
           />
         </div>
       </Card>
 
       {/* Tree Card */}
-      <Card className="p-6 rounded-2xl shadow-xl">
-        <div className="flex items-center justify-between mb-6 border-b border-border-subtle pb-4">
-          <div>
-            <h3 className="font-bold text-lg text-text-primary tracking-tight">
-              Chapter Hierarchy
-            </h3>
-            <p className="text-xs text-text-muted">Click chapter to edit details or resources</p>
-          </div>
-          <span className="text-xs text-text-muted font-medium font-numbers">
-            {subject.children.length} Sections
-          </span>
-        </div>
+      <Card className="p-4 sm:p-6">
+        <h3 className="font-bold text-lg text-text-primary mb-6 border-b border-border-subtle pb-4">
+          Chapter Hierarchy
+        </h3>
         <div className="space-y-2 max-w-full overflow-x-auto">
           {subject.children.map((child, index) => (
             <TreeNode

@@ -29,21 +29,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-bg-surface/85 backdrop-blur-2xl border-r border-border-subtle p-5">
+    <div className="flex h-full flex-col bg-bg-surface border-r border-border-subtle p-5">
       <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="flex items-center gap-3 group" onClick={onClose}>
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-200">
-            <span className="font-extrabold text-text-primary text-xl tracking-tight">G</span>
+        <Link to="/" className="flex items-center gap-3" onClick={onClose}>
+          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <span className="font-bold text-text-primary text-xl">G</span>
           </div>
-          <div>
-            <span className="font-extrabold text-base tracking-wide bg-gradient-to-r from-text-primary via-slate-100 to-text-secondary bg-clip-text text-transparent block">
-              Study Tracker
-            </span>
-            <span className="text-[11px] text-text-muted font-medium">BPSC & BCS Prep</span>
-          </div>
+          <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
+            G Study Tracker
+          </span>
         </Link>
         <button
-          className="lg:hidden p-2 rounded-xl border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
+          className="lg:hidden p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
           onClick={onClose}
           aria-label="Close menu"
         >
@@ -51,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1.5">
+      <nav className="flex-1 space-y-1">
         {NAV_ITEMS.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -60,11 +57,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             return (
               <div
                 key={item.name}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-muted cursor-not-allowed rounded-xl opacity-50 group relative"
+                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-muted cursor-not-allowed rounded-lg opacity-60 group relative"
               >
-                <Icon className="h-4.5 w-4.5" />
+                <Icon className="h-5 w-5" />
                 <span>{item.name}</span>
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-border-subtle text-text-muted px-2 py-0.5 rounded-full font-normal">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-border-subtle text-text-muted px-1.5 py-0.5 rounded font-normal">
                   Soon
                 </span>
               </div>
@@ -77,25 +74,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               to={item.path}
               onClick={onClose}
               className={clsx(
-                "flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 relative group",
+                "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
                 isActive
-                  ? "bg-primary text-text-primary shadow-lg shadow-primary/25 border border-primary/40"
-                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary hover:translate-x-0.5",
+                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
+                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
               )}
             >
-              <Icon className={clsx("h-4.5 w-4.5 transition-transform group-hover:scale-110", isActive ? "text-text-primary" : "text-text-muted group-hover:text-primary")} />
+              <Icon className="h-5 w-5" />
               <span>{item.name}</span>
-              {isActive && (
-                <span className="absolute right-3.5 h-2 w-2 rounded-full bg-white shadow-sm shadow-white" />
-              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-border-subtle pt-4 text-[11px] text-text-muted text-center flex items-center justify-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-status-completed inline-block animate-pulse" />
-        Live Sheet Sync
+      <div className="border-t border-border-subtle pt-4 text-xs text-text-muted text-center">
+        v1.0.0 &bull; Dynamic Calculations
       </div>
     </div>
   );

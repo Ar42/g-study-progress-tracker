@@ -141,12 +141,17 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
       ? initialData.parentId || ""
       : parentId;
 
+    let safeStatus = data.status;
+    if (safeStatus === ProgressStatus.OVERDUE) {
+      safeStatus = ProgressStatus.IN_PROGRESS;
+    }
+
     const payload = {
       id: finalId,
       name: data.name,
       is_subject: isSubject,
       parentId: finalParentId,
-      status: data.status,
+      status: safeStatus,
       preliMarks: data.preliMarks || "",
       comments: data.comments || "",
       startedDate: formatDate(data.startedDate),
