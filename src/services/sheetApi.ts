@@ -194,18 +194,22 @@ export const sheetApi = createApi({
           const node = nodeMap.get(r.id);
           if (!node) return;
 
-          // Treat as root subject if is_subject is explicitly true, or fallback to parentId check
-          if (r.is_subject || (!r.parentId && r.is_subject !== false)) {
+          // Only consider as active root subject if is_subject is explicitly TRUE (allows draft subjects with FALSE)
+          if (r.is_subject === true) {
             subjects.push({
               ...node,
               children: node.children || [],
             });
           } else if (r.parentId) {
-            const parentNode = nodeMap.get(r.parentId);
-            if (parentNode && parentNode.children) {
+            const parentNode = nodeMap.get(r.parentId.trim());
+            if (parentNode) {
+              if (!parentNode.children) {
+                parentNode.children = [];
+              }
               parentNode.children.push(node);
             }
           }
+          // If is_subject is FALSE and has no parentId, it is a draft and is ignored
         });
 
         if (subjects.length === 0) {

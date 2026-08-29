@@ -21,11 +21,13 @@ interface TreeNodeProps {
   readonly filterStatus?: string;
   readonly onStatusToggle?: (node: any, newStatus: ProgressStatus) => void;
   readonly onNodeMove?: (draggedId: string, targetId: string) => void;
+  readonly index?: number;
 }
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   subjectId,
+  index,
   depth = 0,
   onEdit,
   filterStatus = "ALL",
@@ -160,6 +162,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
             {/* Node Name */}
             <div className="flex items-center gap-2 break-words whitespace-normal flex-1">
+              {/* <span className="bg-black text-white text-xs p-1 rounded-md"> */}
+              {index !== undefined && (
+                <span className="text-sm p-1 rounded-md font-bold">
+                  {index + 1}{" "}
+                </span>
+              )}
               <span
                 onClick={handleTextClick}
                 className={clsx(
@@ -182,11 +190,25 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               {node.comments}
             </div>
           )}
-          {((node as any).startedDate || (node as any).targetToCompleteDate || (node as any).completedDate) && (
+          {((node as any).startedDate ||
+            (node as any).targetToCompleteDate ||
+            (node as any).completedDate) && (
             <div className="flex flex-wrap gap-3 mt-1.5 ml-[34px] text-[10px] font-medium">
-              {(node as any).startedDate && <span className="text-text-muted">Started: {(node as any).startedDate}</span>}
-              {(node as any).targetToCompleteDate && <span className="text-yellow-500">Target: {(node as any).targetToCompleteDate}</span>}
-              {(node as any).completedDate && <span className="text-status-completed">Completed: {(node as any).completedDate}</span>}
+              {(node as any).startedDate && (
+                <span className="text-text-muted">
+                  Started: {(node as any).startedDate}
+                </span>
+              )}
+              {(node as any).targetToCompleteDate && (
+                <span className="text-yellow-500">
+                  Target: {(node as any).targetToCompleteDate}
+                </span>
+              )}
+              {(node as any).completedDate && (
+                <span className="text-status-completed">
+                  Completed: {(node as any).completedDate}
+                </span>
+              )}
             </div>
           )}
           {node.links && node.links.length > 0 && (
@@ -238,14 +260,16 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                   e.stopPropagation();
                   const currentStatus = (node as any).status;
                   const newStatus =
-                    currentStatus === ProgressStatus.IN_PROGRESS || currentStatus === ProgressStatus.OVERDUE
+                    currentStatus === ProgressStatus.IN_PROGRESS ||
+                    currentStatus === ProgressStatus.OVERDUE
                       ? ProgressStatus.NOT_STARTED
                       : ProgressStatus.IN_PROGRESS;
                   onStatusToggle(node, newStatus);
                 }}
                 className={clsx(
                   "px-2 py-1 text-xs font-semibold rounded transition-all duration-200 cursor-pointer",
-                  ((node as any).status === ProgressStatus.IN_PROGRESS || (node as any).status === ProgressStatus.OVERDUE)
+                  (node as any).status === ProgressStatus.IN_PROGRESS ||
+                    (node as any).status === ProgressStatus.OVERDUE
                     ? "bg-yellow-500 text-black border-2 border-yellow-300 shadow-md shadow-yellow-500/20 font-bold"
                     : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/25",
                 )}

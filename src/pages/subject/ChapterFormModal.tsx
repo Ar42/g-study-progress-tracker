@@ -50,9 +50,20 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
 }) => {
   const parseDate = (dateStr?: string) => {
     if (!dateStr) return null;
+    if (typeof dateStr !== "string") return null;
+    // Handle DD-MM-YYYY
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr.trim())) {
+      const [d, m, y] = dateStr.trim().split("-");
+      const date = new Date(`${y}-${m}-${d}`);
+      return isNaN(date.getTime()) ? null : date;
+    }
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? null : d;
   };
+
+  const isSubject = Boolean(
+    initialData && (initialData.is_subject || !initialData.parentId),
+  );
 
   const {
     register,
@@ -61,7 +72,7 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
     reset,
     setValue,
     getValues,
-    formState: { errors }
+    formState: { errors },
   } = useForm<ChapterFormData>({
     resolver: zodResolver(chapterSchema),
     defaultValues: {
@@ -74,21 +85,25 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
       targetToCompleteDate: null,
       completedDate: null,
       links: [],
-    }
+    },
   });
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "links"
+    name: "links",
   });
 
   useEffect(() => {
     if (initialData) {
       reset({
-        id: initialData.id || `ch-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        id:
+          initialData.id ||
+          `ch-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         name: initialData.name || "",
         status: initialData.status || ProgressStatus.NOT_STARTED,
-        preliMarks: initialData.preliMarks ? String(initialData.preliMarks) : "",
+        preliMarks: initialData.preliMarks
+          ? String(initialData.preliMarks)
+          : "",
         comments: initialData.comments || "",
         startedDate: parseDate(initialData.startedDate),
         targetToCompleteDate: parseDate(initialData.targetToCompleteDate),
@@ -108,42 +123,58 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
   }, [onClose]);
 
   const formatDate = (date?: Date | null) => {
-    if (!date) return "";
+    if (!date || isNaN(date.getTime())) return "";
     return date.toISOString().split("T")[0]; // YYYY-MM-DD format
   };
 
   const onSubmit = (data: ChapterFormData) => {
     // Filter empty links
-    const filteredLinks = data.links?.filter(l => l.title || l.link || l.sourceName) || [];
-    
+    const filteredLinks =
+      data.links?.filter((l) => l.title || l.link || l.sourceName) || [];
+
+    const finalId =
+      data.id ||
+      initialData?.id ||
+      `ch-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    const finalParentId = initialData
+      ? initialData.parentId || ""
+      : parentId;
+
     const payload = {
-      id: data.id,
+      id: finalId,
       name: data.name,
-      is_subject: false,
-      parentId,
+      is_subject: isSubject,
+      parentId: finalParentId,
       status: data.status,
-      preliMarks: data.preliMarks,
-      comments: data.comments,
+      preliMarks: data.preliMarks || "",
+      comments: data.comments || "",
       startedDate: formatDate(data.startedDate),
       targetToCompleteDate: formatDate(data.targetToCompleteDate),
       completedDate: formatDate(data.completedDate),
       links: filteredLinks,
     };
-    
+
     onSave(payload);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-         onClick={(e) => {
-           if (CLOSE_ON_OUTSIDE_CLICK && e.target === e.currentTarget) {
-             onClose();
-           }
-         }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={(e) => {
+        if (CLOSE_ON_OUTSIDE_CLICK && e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="bg-bg-base border border-border-subtle rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-border-subtle sticky top-0 bg-bg-base z-10">
           <h2 className="text-xl font-bold text-text-primary">
-            {initialData ? "Edit Chapter" : "Add New Chapter"}
+            {isSubject
+              ? "Edit Subject Details"
+              : initialData
+                ? "Edit Chapter"
+                : "Add New Chapter"}
           </h2>
           <button
             onClick={onClose}
@@ -155,56 +186,67 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <input type="hidden" {...register("id")} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">ID *</label>
-              <input
-                {...register("id")}
-                disabled={!!initialData}
-                placeholder="Unique ID"
-                className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary disabled:opacity-50"
-              />
-              {errors.id && <p className="text-[10px] text-red-400">{errors.id.message}</p>}
-            </div> */}
-            
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Name *</label>
+              <label className="text-xs font-semibold text-text-secondary">
+                {isSubject ? "Subject Name *" : "Name *"}
+              </label>
               <input
                 {...register("name")}
                 autoFocus={!initialData}
                 className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
               />
-              {errors.name && <p className="text-[10px] text-red-400">{errors.name.message}</p>}
+              {errors.name && (
+                <p className="text-[10px] text-red-400">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
+
+            {!isSubject && (
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-text-secondary">
+                  Status
+                </label>
+                <select
+                  {...register("status")}
+                  className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
+                >
+                  <option value={ProgressStatus.NOT_STARTED}>
+                    Not Started
+                  </option>
+                  <option value={ProgressStatus.IN_PROGRESS}>
+                    In Progress
+                  </option>
+                  <option value={ProgressStatus.COMPLETED}>Completed</option>
+                </select>
+              </div>
+            )}
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Status</label>
-              <select
-                {...register("status")}
-                className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
-              >
-                <option value={ProgressStatus.NOT_STARTED}>Not Started</option>
-                <option value={ProgressStatus.IN_PROGRESS}>In Progress</option>
-                <option value={ProgressStatus.COMPLETED}>Completed</option>
-              </select>
-            </div>
-
-            {/* <div className="space-y-1">
-              <label className="text-xs font-semibold text-text-secondary">Preli Marks</label>
+              <label className="text-xs font-semibold text-text-secondary">
+                Preli Marks
+              </label>
               <input
-                type="number"
+                type="text"
                 {...register("preliMarks")}
+                placeholder="e.g. 15"
                 className="w-full bg-bg-surface border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
               />
-            </div> */}
-
+            </div>
           </div>
 
           <div className="pt-4 pb-2 border-t border-border-subtle mt-4">
-            <h3 className="text-sm font-bold text-text-primary mb-5">Timeline</h3>
+            <h3 className="text-sm font-bold text-text-primary mb-5">
+              Timeline
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-text-secondary block">Started Date</label>
+                <label className="text-sm font-semibold text-text-secondary block">
+                  Started Date
+                </label>
                 <Controller
                   control={control}
                   name="startedDate"
@@ -214,7 +256,10 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
                       onChange={(date: Date | null) => {
                         field.onChange(date);
                         if (date && !getValues("targetToCompleteDate")) {
-                          setValue("targetToCompleteDate", date, { shouldValidate: true, shouldDirty: true });
+                          setValue("targetToCompleteDate", date, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
                         }
                       }}
                       dateFormat="yyyy-MM-dd"
@@ -227,7 +272,9 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-text-secondary block">Target Date</label>
+                <label className="text-sm font-semibold text-text-secondary block">
+                  Target Date
+                </label>
                 <Controller
                   control={control}
                   name="targetToCompleteDate"
@@ -245,7 +292,9 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-text-secondary block">Completed Date</label>
+                <label className="text-sm font-semibold text-text-secondary block">
+                  Completed Date
+                </label>
                 <Controller
                   control={control}
                   name="completedDate"
@@ -265,7 +314,9 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
           </div>
 
           <div className="space-y-1 mt-4">
-            <label className="text-xs font-semibold text-text-secondary">Comments</label>
+            <label className="text-xs font-semibold text-text-secondary">
+              Comments
+            </label>
             <textarea
               {...register("comments")}
               rows={2}
@@ -275,23 +326,32 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
 
           <div className="space-y-3 pt-4 border-t border-border-subtle">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-bold text-text-primary">Links & Resources</label>
+              <label className="text-sm font-bold text-text-primary">
+                Links & Resources
+              </label>
               <button
                 type="button"
-                onClick={() => append({ title: "", link: "", sourceName: "" })}
+                onClick={() =>
+                  append({ title: "", link: "", sourceName: "" })
+                }
                 className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors cursor-pointer"
               >
                 <Plus className="h-3 w-3" />
                 Add Link
               </button>
             </div>
-            
+
             {fields.length === 0 ? (
-              <p className="text-xs text-text-muted italic">No links added.</p>
+              <p className="text-xs text-text-muted italic">
+                No links added.
+              </p>
             ) : (
               <div className="space-y-3">
                 {fields.map((field, idx) => (
-                  <div key={field.id} className="flex items-start gap-3 bg-bg-surface-hover p-3 rounded-lg border border-border-subtle">
+                  <div
+                    key={field.id}
+                    className="flex items-start gap-3 bg-bg-surface-hover p-3 rounded-lg border border-border-subtle"
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
                       <input
                         {...register(`links.${idx}.title` as const)}
@@ -304,13 +364,12 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
                           placeholder="URL (https://...)"
                           className="w-full bg-bg-surface border border-border-subtle rounded-md px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary"
                         />
-                        {errors.links?.[idx]?.link && <p className="text-[10px] text-red-400">{errors.links[idx].link?.message}</p>}
+                        {errors.links?.[idx]?.link && (
+                          <p className="text-[10px] text-red-400">
+                            {errors.links[idx].link?.message}
+                          </p>
+                        )}
                       </div>
-                      {/* <input
-                        {...register(`links.${idx}.sourceName` as const)}
-                        placeholder="Source Name"
-                        className="w-full bg-bg-surface border border-border-subtle rounded-md px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary"
-                      /> */}
                     </div>
                     <button
                       type="button"
@@ -339,7 +398,13 @@ export const ChapterFormModal: React.FC<ChapterFormModalProps> = ({
               disabled={isSaving}
               className="px-4 py-2 text-sm font-medium text-text-primary bg-primary hover:bg-primary-hover rounded-lg transition-colors shadow-md disabled:opacity-50 cursor-pointer"
             >
-              {isSaving ? "Saving..." : initialData ? "Save Changes" : "Create Chapter"}
+              {isSaving
+                ? "Saving..."
+                : isSubject
+                  ? "Save Subject Details"
+                  : initialData
+                    ? "Save Changes"
+                    : "Create Chapter"}
             </button>
           </div>
         </form>

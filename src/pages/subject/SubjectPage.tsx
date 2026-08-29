@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Plus,
   Filter,
+  Pencil,
 } from "lucide-react";
 import type { StudyNode } from "../../types";
 
@@ -202,15 +203,16 @@ export const SubjectPage: React.FC = () => {
         payload,
       }).unwrap();
 
+      const itemType = payload.is_subject ? "Subject" : "Chapter";
       toast.success(
-        `Chapter ${action === "CREATE" ? "created" : "updated"} successfully!`,
+        `${itemType} ${action === "CREATE" ? "created" : "updated"} successfully!`,
       );
       setIsModalOpen(false);
 
       const data = await triggerFetch().unwrap();
       if (data) setSubjects(data);
-    } catch (e) {
-      toast.error(`Failed to ${action.toLowerCase()} chapter.`);
+    } catch (e: any) {
+      toast.error(e?.message || `Failed to ${action.toLowerCase()} item.`);
     }
   };
 
@@ -226,9 +228,21 @@ export const SubjectPage: React.FC = () => {
             <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-extrabold tracking-tight text-text-primary break-words whitespace-normal">
-            {subject.name}
-          </h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-3xl font-extrabold tracking-tight text-text-primary break-words whitespace-normal">
+              {subject.name}
+            </h1>
+            <button
+              onClick={() => {
+                setEditingNode(subject);
+                setIsModalOpen(true);
+              }}
+              className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-bg-surface transition-colors cursor-pointer"
+              title="Edit Subject Details"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          </div>
           <p className="text-text-secondary text-sm">
             Recursive tree hierarchy breakdown and progress tracking.
           </p>
@@ -346,9 +360,10 @@ export const SubjectPage: React.FC = () => {
           Chapter Hierarchy
         </h3>
         <div className="space-y-2 max-w-full overflow-x-auto">
-          {subject.children.map((child) => (
+          {subject.children.map((child, index) => (
             <TreeNode
               key={child.id}
+              index={index}
               node={child}
               subjectId={subject.id}
               onEdit={handleEditChapter}

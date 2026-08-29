@@ -62,7 +62,9 @@ export const DashboardPage: React.FC = () => {
 
   // Drag and Drop State for Subjects
   const [draggedSubjectId, setDraggedSubjectId] = useState<string | null>(null);
-  const [dragOverSubjectId, setDragOverSubjectId] = useState<string | null>(null);
+  const [dragOverSubjectId, setDragOverSubjectId] = useState<string | null>(
+    null,
+  );
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedSubjectId(id);
@@ -90,7 +92,7 @@ export const DashboardPage: React.FC = () => {
           action: "SWAP",
           payload: { id1: sourceId, id2: targetId },
         }).unwrap();
-        
+
         toast.success("Subjects reordered successfully!");
         const data = await triggerFetch().unwrap();
         if (data) setSubjects(data);
@@ -388,8 +390,10 @@ export const DashboardPage: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 className={clsx(
                   "transition-all duration-200",
-                  isDragged && "opacity-40 scale-95 border-dashed border-primary",
-                  isDragOverThis && "scale-[1.02] ring-2 ring-primary ring-offset-2 ring-offset-bg-base"
+                  isDragged &&
+                    "opacity-40 scale-95 border-dashed border-primary",
+                  isDragOverThis &&
+                    "scale-[1.02] ring-2 ring-primary ring-offset-2 ring-offset-bg-base",
                 )}
               >
                 <Card
