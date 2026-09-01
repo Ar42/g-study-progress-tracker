@@ -23,7 +23,7 @@ export const DashboardPage: React.FC = () => {
   const subjects = useStudyStore((state) => state.subjects);
   const navigate = useNavigate();
 
-  const EXAM_DATE = new Date("2026-08-31T00:00:00");
+  const EXAM_DATE = new Date("2026-10-31T00:00:00");
   // const COUNT_DOWN_LABEL = "Exam Countdown";
   const COUNT_DOWN_LABEL = "Syllabus Completion Time Left";
   const [timeLeft, setTimeLeft] = useState("");
