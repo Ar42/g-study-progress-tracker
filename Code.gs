@@ -14,12 +14,46 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    // Parse payload
+    var requestData;
+    try {
+      requestData = JSON.parse(e.postData.contents);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "Invalid JSON input: " + err.toString()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var action = requestData.action;
+    var payload = requestData.payload;
+    var domain = requestData.domain || (payload && payload.domain) || "BCS";
+    var targetSheetName = requestData.sheetName || (domain === "IT" ? "IT" : "Sheet1");
+
+    if (!action || !payload) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "Missing action or payload parameter"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = spreadsheet.getSheetByName(targetSheetName);
+
+    if (!sheet) {
+      if (domain === "IT" || targetSheetName === "IT") {
+        sheet = spreadsheet.insertSheet("IT");
+        sheet.getRange(1, 1, 1, 8).setValues([["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links"]]);
+      } else {
+        sheet = spreadsheet.getActiveSheet();
+      }
+    }
+
     var lastCol = sheet.getLastColumn();
     if (lastCol < 1) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
-        message: "Active sheet has no columns"
+        message: "Target sheet has no columns"
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -33,28 +67,7 @@ function doPost(e) {
         headerMap[key] = i + 1; // 1-based index for column
       }
     }
-    
-    // Parse payload
-    var requestData;
-    try {
-      requestData = JSON.parse(e.postData.contents);
-    } catch (err) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "error",
-        message: "Invalid JSON input: " + err.toString()
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    var action = requestData.action;
-    var payload = requestData.payload;
-    
-    if (!action || !payload) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "error",
-        message: "Missing action or payload parameter"
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-    
+
     // Find row by ID helper
     function findRowById(id) {
       var colIndex = headerMap["id"];

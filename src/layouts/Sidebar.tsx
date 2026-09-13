@@ -1,35 +1,32 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { clsx } from "clsx";
-import { LayoutDashboard, FileSpreadsheet, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileSpreadsheet,
+  X,
+  BookOpen,
+  Code,
+  BarChart3,
+} from "lucide-react";
 
 interface SidebarProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
 }
 
-interface NavItem {
-  readonly name: string;
-  readonly path: string;
-  readonly icon: React.ComponentType<{ className?: string }>;
-  readonly disabled?: boolean;
-}
-
-const NAV_ITEMS: readonly NavItem[] = [
-  { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Reports", path: "/reports", icon: FileSpreadsheet },
-  // { name: "Analytics", path: "/analytics", icon: BarChart3, disabled: true },
-  // { name: "Exam Planner", path: "/exam-planner", icon: Calendar, disabled: true },
-  // { name: "Mock Tests", path: "/mock-tests", icon: GraduationCap, disabled: true },
-  // { name: "Vocabulary", path: "/vocabulary", icon: BookOpen, disabled: true },
-  // { name: "Reports", path: "/reports", icon: FileSpreadsheet, disabled: true },
-];
-
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
 
+  const isBcsActive =
+    location.pathname === "/" || location.pathname.startsWith("/subject");
+  const isItActive = location.pathname === "/it";
+  const isBcsReportsActive =
+    location.pathname === "/reports/bcs" || location.pathname === "/reports";
+  const isItReportsActive = location.pathname === "/reports/it";
+
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-bg-surface border-r border-border-subtle p-5">
+    <div className="flex h-full flex-col bg-bg-surface border-r border-border-subtle p-5 overflow-y-auto">
       <div className="flex items-center justify-between mb-8">
         <Link to="/" className="flex items-center gap-3" onClick={onClose}>
           <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
@@ -40,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </span>
         </Link>
         <button
-          className="lg:hidden p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
+          className="lg:hidden p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors cursor-pointer"
           onClick={onClose}
           aria-label="Close menu"
         >
@@ -48,47 +45,101 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
+      <nav className="flex-1 space-y-6">
+        {/* Main Dashboard Link */}
+        <div className="space-y-1">
+          <Link
+            to="/"
+            onClick={onClose}
+            className={clsx(
+              "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
+              location.pathname === "/"
+                ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
+                : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
+            )}
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            <span>Dashboard</span>
+          </Link>
+        </div>
 
-          if (item.disabled) {
-            return (
-              <div
-                key={item.name}
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-muted cursor-not-allowed rounded-lg opacity-60 group relative"
-              >
-                <Icon className="h-5 w-5" />
-                <span>{item.name}</span>
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-border-subtle text-text-muted px-1.5 py-0.5 rounded font-normal">
-                  Soon
-                </span>
-              </div>
-            );
-          }
-
-          return (
+        {/* Study Modules Group */}
+        <div className="space-y-1.5">
+          <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-text-muted">
+            Study Modules
+          </p>
+          <div className="space-y-1 pl-1">
             <Link
-              key={item.name}
-              to={item.path}
+              to="/"
               onClick={onClose}
               className={clsx(
-                "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
-                isActive
+                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                isBcsActive && location.pathname !== "/"
+                  ? "bg-primary/15 text-primary border border-primary/25 font-semibold"
+                  : isBcsActive && location.pathname === "/"
+                    ? "text-primary font-semibold"
+                    : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
+              )}
+            >
+              <BookOpen className="h-4.5 w-4.5" />
+              <span>BCS</span>
+            </Link>
+
+            <Link
+              to="/it"
+              onClick={onClose}
+              className={clsx(
+                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                isItActive
                   ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
                   : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
               )}
             >
-              <Icon className="h-5 w-5" />
-              <span>{item.name}</span>
+              <Code className="h-4.5 w-4.5" />
+              <span>IT</span>
             </Link>
-          );
-        })}
+          </div>
+        </div>
+
+        {/* Reports Submenu Group */}
+        <div className="space-y-1.5">
+          <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-text-muted">
+            Reports
+          </p>
+          <div className="space-y-1 pl-1">
+            <Link
+              to="/reports/bcs"
+              onClick={onClose}
+              className={clsx(
+                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                isBcsReportsActive
+                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
+                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
+              )}
+            >
+              <FileSpreadsheet className="h-4.5 w-4.5" />
+              <span>BCS Reports</span>
+            </Link>
+
+            <Link
+              to="/reports/it"
+              onClick={onClose}
+              className={clsx(
+                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                isItReportsActive
+                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
+                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
+              )}
+            >
+              <BarChart3 className="h-4.5 w-4.5" />
+              <span>IT Reports</span>
+            </Link>
+          </div>
+        </div>
       </nav>
 
       <div className="border-t border-border-subtle pt-4 text-xs text-text-muted text-center">
-        v1.0.0 &bull; Dynamic Calculations
+        v2.0.0 &bull; Multi-Domain Tracker
       </div>
     </div>
   );

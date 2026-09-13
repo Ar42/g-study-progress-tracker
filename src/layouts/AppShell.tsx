@@ -3,22 +3,32 @@ import { Link, Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, RefreshCw } from "lucide-react";
 import { clsx } from "clsx";
-import { useLazyFetchStudyDataQuery } from "../services/sheetApi";
+import { useLazyFetchStudyDataQuery, useLazyFetchITStudyDataQuery } from "../services/sheetApi";
 import { useStudyStore } from "../stores/useStudyStore";
 import { toast } from "sonner";
 
 export const AppShell: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [triggerFetch, { isFetching }] = useLazyFetchStudyDataQuery();
+  const [triggerFetchBCS, { isFetching: isFetchingBCS }] = useLazyFetchStudyDataQuery();
+  const [triggerFetchIT, { isFetching: isFetchingIT }] = useLazyFetchITStudyDataQuery();
   const setSubjects = useStudyStore((state) => state.setSubjects);
+  const setITTopics = useStudyStore((state) => state.setITTopics);
+
+  const isFetching = isFetchingBCS || isFetchingIT;
 
   const handleSync = async () => {
     try {
-      const data = await triggerFetch().unwrap();
-      if (data) {
-        setSubjects(data);
-        toast.success("Data synced successfully from Google Sheets!");
+      const [bcsData, itData] = await Promise.all([
+        triggerFetchBCS().unwrap().catch(() => null),
+        triggerFetchIT().unwrap().catch(() => null),
+      ]);
+      if (bcsData) {
+        setSubjects(bcsData);
       }
+      if (itData) {
+        setITTopics(itData);
+      }
+      toast.success("Data synced successfully from Google Sheets!");
     } catch {
       toast.error("Failed to sync data from Google Sheets.");
     }

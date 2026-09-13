@@ -7,7 +7,8 @@ import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { SubjectPage } from "./pages/subject/SubjectPage";
 import { ReportsPage } from "./pages/reports/ReportsPage";
 import { LoginPage } from "./pages/login/LoginPage";
-import { useFetchStudyDataQuery } from "./services/sheetApi";
+import { ITPage } from "./pages/it/ITPage";
+import { useFetchStudyDataQuery, useFetchITStudyDataQuery } from "./services/sheetApi";
 
 function getCookie(name: string): string | null {
   const nameEQ = name + "=";
@@ -26,16 +27,24 @@ const ProtectedRoute = () => {
 };
 
 function App() {
-  const { data, isLoading, error } = useFetchStudyDataQuery();
+  const { data: bcsData, isLoading: isBCSLoading, error: bcsError } = useFetchStudyDataQuery();
+  const { data: itData } = useFetchITStudyDataQuery();
   const setSubjects = useStudyStore((state) => state.setSubjects);
+  const setITTopics = useStudyStore((state) => state.setITTopics);
 
   useEffect(() => {
-    if (data) {
-      setSubjects(data);
+    if (bcsData) {
+      setSubjects(bcsData);
     }
-  }, [data, setSubjects]);
+  }, [bcsData, setSubjects]);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (itData) {
+      setITTopics(itData);
+    }
+  }, [itData, setITTopics]);
+
+  if (isBCSLoading) {
     return (
       <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center space-y-4">
         <div className="relative h-14 w-14">
@@ -50,10 +59,10 @@ function App() {
     );
   }
 
-  if (error) {
+  if (bcsError) {
     const errorDetails = 
-      error && typeof error === "object" && "message" in error 
-        ? String((error as any).message) 
+      bcsError && typeof bcsError === "object" && "message" in bcsError 
+        ? String((bcsError as any).message) 
         : "Verify sheet link sharing permissions (Anyone with the link can view).";
 
     return (
@@ -91,7 +100,10 @@ function App() {
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="subject/:subjectId" element={<SubjectPage />} />
-            <Route path="reports" element={<ReportsPage />} />
+            <Route path="it" element={<ITPage />} />
+            <Route path="reports" element={<Navigate to="/reports/bcs" replace />} />
+            <Route path="reports/bcs" element={<ReportsPage domain="BCS" />} />
+            <Route path="reports/it" element={<ReportsPage domain="IT" />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

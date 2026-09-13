@@ -1,9 +1,18 @@
 import { ProgressStatus } from "../enums/progress";
-import type { StudyNode, Subject } from "../types";
+import type { StudyNode, Subject, ITTopic } from "../types";
 
 export interface ProgressStats {
   readonly completed: number;
   readonly total: number;
+  readonly percentage: number;
+}
+
+export interface ITStatusBreakdown {
+  readonly total: number;
+  readonly completed: number;
+  readonly inProgress: number;
+  readonly overdue: number;
+  readonly notStarted: number;
   readonly percentage: number;
 }
 
@@ -97,6 +106,50 @@ export function calculateProgress(nodes: readonly StudyNode[] | StudyNode | Subj
   return {
     completed,
     total,
+    percentage,
+  };
+}
+
+/**
+ * Calculates dynamic statistics for IT topics.
+ */
+export function calculateITProgress(topics: readonly ITTopic[]): ProgressStats {
+  const total = topics.length;
+  const completed = topics.filter((t) => t.status === ProgressStatus.COMPLETED).length;
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    completed,
+    total,
+    percentage,
+  };
+}
+
+/**
+ * Returns full status breakdown for IT topics.
+ */
+export function getITStatusBreakdown(topics: readonly ITTopic[]): ITStatusBreakdown {
+  const total = topics.length;
+  let completed = 0;
+  let inProgress = 0;
+  let overdue = 0;
+  let notStarted = 0;
+
+  for (const t of topics) {
+    if (t.status === ProgressStatus.COMPLETED) completed++;
+    else if (t.status === ProgressStatus.IN_PROGRESS) inProgress++;
+    else if (t.status === ProgressStatus.OVERDUE) overdue++;
+    else notStarted++;
+  }
+
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    total,
+    completed,
+    inProgress,
+    overdue,
+    notStarted,
     percentage,
   };
 }

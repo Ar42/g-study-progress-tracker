@@ -4,6 +4,8 @@ const ADMIN_URL =
   import.meta.env.VITE_ADMIN_URL ||
   "https://script.google.com/macros/s/AKfycbzBao4_TyAme4m-OLT_xOjlO778Ip1QNJX8sOGDiJvaop-9tE_eiRF51O3Bb7VPB63xWg/exec";
 
+import type { StudyDomain } from "../types";
+
 export interface AdminPayload {
   readonly id?: string;
   readonly name?: string;
@@ -18,10 +20,14 @@ export interface AdminPayload {
   readonly is_subject?: boolean;
   readonly id1?: string;
   readonly id2?: string;
+  readonly domain?: StudyDomain;
+  readonly sheetName?: string;
 }
 
 export interface AdminRequest {
   readonly action: "CREATE" | "UPDATE" | "DELETE" | "SWAP";
+  readonly domain?: StudyDomain;
+  readonly sheetName?: string;
   readonly payload: AdminPayload;
 }
 

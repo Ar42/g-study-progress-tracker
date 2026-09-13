@@ -31,8 +31,21 @@ export interface ParentNode extends NodeExtension {
 
 export type StudyNode = LeafNode | ParentNode;
 
+export type StudyDomain = "BCS" | "IT";
+
 export interface Subject extends NodeExtension {
   readonly id: string;
   readonly name: string;
   readonly children: readonly StudyNode[];
+}
+
+export interface ITTopic {
+  readonly id: string;
+  readonly name: string;
+  readonly status: ProgressStatus;
+  readonly comments?: string;
+  readonly startedDate?: string;
+  readonly targetToCompleteDate?: string;
+  readonly completedDate?: string;
+  readonly links?: readonly LinkItem[];
 }

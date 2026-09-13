@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudyStore } from "../../stores/useStudyStore";
-import { calculateProgress } from "../../utils/progress";
+import { calculateProgress, calculateITProgress } from "../../utils/progress";
 import { Card } from "../../components/ui/Card";
 import { ProgressCircle } from "../../components/ui/ProgressCircle";
 import {
@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Timer,
   AlertTriangle,
+  Code,
+  ArrowRight,
 } from "lucide-react";
 import { intervalToDuration, formatDuration } from "date-fns";
 import { ProgressStatus } from "../../enums/progress";
@@ -21,6 +23,7 @@ import { clsx } from "clsx";
 
 export const DashboardPage: React.FC = () => {
   const subjects = useStudyStore((state) => state.subjects);
+  const itTopics = useStudyStore((state) => state.itTopics);
   const navigate = useNavigate();
 
   const EXAM_DATE = new Date("2026-10-31T00:00:00");
@@ -329,7 +332,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 flex items-center justify-between gap-4 border-l-4 border-l-primary hover:-translate-y-1 transition-transform">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -337,7 +340,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-text-muted font-bold uppercase tracking-wider">
-                Total Marks
+                BCS Total Marks
               </p>
               <p className="text-3xl font-black text-text-primary font-numbers">
                 {totalSubjectsMarks}
@@ -353,7 +356,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-xs text-text-muted font-bold uppercase tracking-wider">
-                Overall Completion
+                BCS Completion
               </p>
               <p className="text-3xl font-black text-text-primary font-numbers">
                 {overallPercentage}%
@@ -362,17 +365,55 @@ export const DashboardPage: React.FC = () => {
           </div>
           <ProgressCircle
             percentage={overallPercentage}
-            size={80}
+            size={70}
             strokeWidth={5}
           />
         </Card>
+
+        {(() => {
+          const itStats = calculateITProgress(itTopics);
+          return (
+            <Card
+              interactive
+              onClick={() => navigate("/it")}
+              className="p-5 flex items-center justify-between gap-4 border-l-4 border-l-status-completed hover:-translate-y-1 transition-transform cursor-pointer group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-status-completed/10 flex items-center justify-center text-status-completed group-hover:scale-105 transition-transform">
+                  <Code className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs text-text-muted font-bold uppercase tracking-wider">
+                    IT Completion
+                  </p>
+                  <p className="text-3xl font-black text-text-primary font-numbers">
+                    {itStats.percentage}%
+                  </p>
+                  <p className="text-[10px] text-text-muted font-numbers">
+                    {itStats.completed} / {itStats.total} Topics
+                  </p>
+                </div>
+              </div>
+              <ProgressCircle
+                percentage={itStats.percentage}
+                size={70}
+                strokeWidth={5}
+              />
+            </Card>
+          );
+        })()}
       </div>
 
       {/* Grid of Subject Cards */}
       <div>
-        <h2 className="text-lg font-bold text-text-primary mb-5 tracking-tight">
-          Your Subjects
-        </h2>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-text-primary tracking-tight">
+            BCS Subjects
+          </h2>
+          <span className="text-xs text-text-muted">
+            Drag to reorder subjects
+          </span>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {subjects.map((subj) => {
             const stats = calculateProgress(subj);
@@ -438,6 +479,44 @@ export const DashboardPage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* IT Study Module Quick Access Banner */}
+      <div className="glass-panel rounded-2xl p-6 border border-border-subtle flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="flex items-center gap-5 z-10">
+          <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 shadow-inner flex-shrink-0">
+            <Code className="h-7 w-7" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-text-primary">
+                IT Study Module
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/15 text-primary border border-primary/30 uppercase tracking-wider">
+                Independent Domain
+              </span>
+            </div>
+            <p className="text-xs text-text-secondary max-w-xl">
+              Track your computer science and engineering topics without subject grouping. Manage topics, timelines, study links, and reports.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end flex-shrink-0">
+          <button
+            onClick={() => navigate("/reports/it")}
+            className="px-4 py-2 text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-surface hover:bg-bg-surface-hover border border-border-subtle rounded-lg transition-colors cursor-pointer"
+          >
+            IT Reports
+          </button>
+          <button
+            onClick={() => navigate("/it")}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-primary text-text-primary hover:bg-primary-hover rounded-lg transition-colors shadow-md cursor-pointer"
+          >
+            <span>Open IT Module</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
 
