@@ -6,6 +6,9 @@ import type { StoredStatus } from "../../../enums/progress";
 import type { TreeNode } from "../../../types";
 import { ItemDetails } from "../../study/components/ItemDetails";
 import { StatusControl } from "../../study/components/StatusControl";
+import { StatusIcon, StatusTag } from "../../study/components/StatusVisual";
+import { statusNameClass, statusRowClass } from "../../study/statusStyles";
+import { collectLeaves, countByStatus } from "../../../lib/tree";
 
 export interface ChapterTreeProps {
   readonly nodes: readonly TreeNode[];
@@ -57,6 +60,7 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
   const { onEdit, onStatusChange, onMove, collapsed, onToggle } = tree;
   const { row, isLeaf, stats, status } = node;
   const open = !collapsed.has(row.id);
+  const inside = isLeaf ? null : countByStatus(collectLeaves(node.children).map((l) => l.status));
   const draggable = Boolean(onMove);
 
   const dragHandlers = draggable
@@ -100,7 +104,9 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
         {...dragHandlers}
         className={cn(
           "group relative flex flex-col gap-2 rounded-xl border px-2.5 py-2.5 transition-colors sm:flex-row sm:items-start sm:gap-3",
-          isLeaf ? "border-transparent hover:bg-surface-2" : "border-border bg-surface-2/40 hover:bg-surface-2",
+          isLeaf
+            ? cn("border-transparent", statusRowClass(status), (status === "NOT_STARTED" || status === "COMPLETED") && "hover:bg-surface-2")
+            : "border-border bg-surface-2/40 hover:bg-surface-2",
           dnd.overId === row.id && "border-primary/60 bg-primary-soft",
           dnd.dragId === row.id && "opacity-40",
         )}
@@ -111,7 +117,9 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
             <GripVertical className="mt-1 hidden size-4 shrink-0 cursor-grab text-fg-subtle/0 transition-colors group-hover:text-fg-subtle lg:block" />
           )}
           {isLeaf ? (
-            <span className="w-6 shrink-0" />
+            <span className="flex size-6 shrink-0 items-center justify-center">
+              <StatusIcon status={status} />
+            </span>
           ) : (
             <button
               type="button"
@@ -134,23 +142,29 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
                   onClick={() => onEdit(node)}
                   className={cn(
                     "cursor-pointer text-left text-sm wrap-break-word hover:underline hover:decoration-fg-subtle hover:underline-offset-4",
-                    !isLeaf && "font-medium",
-                    !isLeaf
-                      ? "text-fg"
-                      : status === "OVERDUE"
-                        ? "text-danger"
-                        : status === "COMPLETED"
-                          ? "text-fg-muted line-through decoration-fg-subtle/60"
-                          : "text-fg",
+                    isLeaf ? statusNameClass(status) : "font-semibold text-fg",
                   )}
                 >
                   {row.name}
                 </button>
-                {row.preliMarks && (
-                  <Badge tone="primary" className="ml-2 align-middle font-numbers">
-                    {row.preliMarks} marks
-                  </Badge>
-                )}
+                <span className="ml-2 inline-flex flex-wrap items-center gap-1.5 align-middle">
+                  {isLeaf && <StatusTag status={status} />}
+                  {inside && inside.OVERDUE > 0 && (
+                    <Badge tone="danger" dot>
+                      {inside.OVERDUE} overdue
+                    </Badge>
+                  )}
+                  {inside && inside.IN_PROGRESS > 0 && (
+                    <Badge tone="info" dot>
+                      {inside.IN_PROGRESS} in progress
+                    </Badge>
+                  )}
+                  {row.preliMarks && (
+                    <Badge tone="primary" className="font-numbers">
+                      {row.preliMarks} marks
+                    </Badge>
+                  )}
+                </span>
               </div>
             </div>
             <ItemDetails row={row} status={status} />

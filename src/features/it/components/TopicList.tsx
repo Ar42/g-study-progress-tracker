@@ -5,6 +5,8 @@ import type { StoredStatus } from "../../../enums/progress";
 import type { Topic } from "../../../types";
 import { ItemDetails } from "../../study/components/ItemDetails";
 import { StatusControl } from "../../study/components/StatusControl";
+import { StatusIcon, StatusTag } from "../../study/components/StatusVisual";
+import { statusNameClass, statusRowClass } from "../../study/statusStyles";
 import { useDragSwap } from "../../study/hooks/useDragSwap";
 
 export interface TopicListProps {
@@ -35,7 +37,9 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap }: 
             onDrop={draggable ? (e) => dnd.drop(e, row.id) : undefined}
             onDragEnd={draggable ? dnd.end : undefined}
             className={cn(
-              "group flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-surface-2/60 sm:flex-row sm:items-start sm:px-5",
+              "group relative flex flex-col gap-3 px-4 py-3 transition-colors sm:flex-row sm:items-start sm:px-5",
+              statusRowClass(status),
+              (status === "NOT_STARTED" || status === "COMPLETED") && "hover:bg-surface-2/60",
               dnd.dragId === row.id && "opacity-40",
               dnd.overId === row.id && "bg-primary-soft",
             )}
@@ -48,6 +52,7 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap }: 
                 <span className="w-6 font-numbers text-xs text-fg-subtle">
                   {String(numberOf(row.id)).padStart(2, "0")}
                 </span>
+                <StatusIcon status={status} />
               </div>
               <div className="min-w-0 flex-1 space-y-1.5">
                 <button
@@ -55,15 +60,14 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap }: 
                   onClick={() => onEdit(t)}
                   className={cn(
                     "cursor-pointer text-left text-sm font-medium wrap-break-word hover:underline hover:decoration-fg-subtle hover:underline-offset-4",
-                    status === "COMPLETED"
-                      ? "text-fg-muted line-through decoration-fg-subtle/60"
-                      : status === "OVERDUE"
-                        ? "text-danger"
-                        : "text-fg",
+                    statusNameClass(status),
                   )}
                 >
                   {row.name}
                 </button>
+                <span className="ml-2 inline-flex align-middle">
+                  <StatusTag status={status} />
+                </span>
                 <ItemDetails row={row} status={status} />
               </div>
             </div>
