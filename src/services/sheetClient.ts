@@ -90,6 +90,9 @@ async function post(action: WriteAction, domain: StudyDomain, payload: Record<st
     method: "POST",
     // text/plain avoids a CORS preflight, which Apps Script cannot answer.
     headers: { "Content-Type": "text/plain;charset=utf-8" },
+    // Lets the request finish even if the page reloads or closes mid-save,
+    // so there's no need for a "changes may not be saved" prompt.
+    keepalive: true,
     body: JSON.stringify({ action, domain, sheetName, payload: { ...payload, domain, sheetName } }),
   });
   if (!res.ok) throw new Error(`Apps Script responded with ${res.status}.`);

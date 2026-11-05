@@ -20,14 +20,6 @@ export function SyncIndicator({ fetching, onSync }: SyncIndicatorProps) {
     return () => window.clearInterval(id);
   }, []);
 
-  // Warn before closing the tab with unsaved writes.
-  useEffect(() => {
-    if (pending === 0) return;
-    const handler = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [pending]);
-
   let content;
   if (pending > 0) {
     content = (
