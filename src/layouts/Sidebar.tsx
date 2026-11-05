@@ -1,8 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, Code2, LampDesk, LayoutDashboard, LogOut, PieChart, X } from "lucide-react";
+import { BarChart3, Code2, LayoutDashboard, LogOut, PieChart, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui";
+import { Logo } from "../components/ui/Logo";
 import type { Subject } from "../types";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -31,21 +32,19 @@ const SECTIONS: readonly { title?: string; items: readonly NavItem[] }[] = [
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    "relative flex h-9 items-center gap-2.5 rounded-xl px-3 text-sm transition-colors [&_svg]:size-4 [&_svg]:shrink-0",
+    "relative flex h-9 items-center gap-2.5 rounded-lg px-3 text-sm transition-colors [&_svg]:size-4 [&_svg]:shrink-0",
     isActive
-      ? "bg-primary-soft font-semibold text-fg before:absolute before:inset-y-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-primary [&_svg]:text-primary"
+      ? "bg-primary-soft font-semibold text-primary [&_svg]:text-primary"
       : "text-fg-muted hover:bg-surface-2 hover:text-fg",
   );
 
 export function Brand({ onClick }: { readonly onClick?: () => void }) {
   return (
     <NavLink to="/" onClick={onClick} className="flex items-center gap-3">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-[0_6px_18px_-6px_var(--c-primary)]">
-        <LampDesk className="size-4.5" />
-      </span>
+      <Logo />
       <span className="leading-tight">
-        <span className="block font-display text-base font-semibold text-fg">Study Tracker</span>
-        <span className="block text-[11px] text-fg-subtle">পড়ার টেবিল</span>
+        <span className="block text-[15px] font-semibold tracking-tight text-fg">Study Tracker</span>
+        <span className="block text-[11px] text-fg-subtle">BCS &amp; IT preparation</span>
       </span>
     </NavLink>
   );
@@ -64,7 +63,7 @@ export function Sidebar({ open, onClose, onLogout, subjects }: SidebarProps) {
       {open && <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm animate-fade-in lg:hidden" onClick={onClose} />}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-surface/95 backdrop-blur-xl transition-transform duration-300 ease-out lg:w-64 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-surface transition-transform duration-300 ease-out lg:w-64 lg:translate-x-0",
           open ? "translate-x-0 shadow-pop" : "-translate-x-full",
         )}
       >

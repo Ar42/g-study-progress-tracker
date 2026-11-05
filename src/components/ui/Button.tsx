@@ -7,7 +7,7 @@ export type ButtonSize = "sm" | "md";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-primary-fg shadow-[0_1px_0_0_rgb(255_255_255/0.25)_inset,0_6px_16px_-6px_var(--c-primary)] hover:bg-primary-hover",
+    "bg-primary text-primary-fg shadow-sm hover:bg-primary-hover",
   secondary: "border border-border bg-surface text-fg shadow-card hover:border-border-strong hover:bg-surface-2",
   ghost: "text-fg-muted hover:bg-surface-2 hover:text-fg",
   danger: "bg-danger-solid text-white hover:brightness-110",
@@ -16,7 +16,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
 
 const SIZES: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-xs gap-1.5 rounded-lg",
-  md: "h-10 px-4 text-sm gap-2 rounded-xl",
+  md: "h-10 px-4 text-sm gap-2 rounded-lg",
 };
 
 export interface ButtonProps extends ComponentProps<"button"> {
@@ -42,7 +42,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center font-semibold whitespace-nowrap transition-all active:translate-y-px",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center font-semibold whitespace-nowrap transition-colors",
         "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
         "disabled:pointer-events-none disabled:opacity-45",
         VARIANTS[variant],

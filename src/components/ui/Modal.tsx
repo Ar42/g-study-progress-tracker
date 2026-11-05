@@ -79,13 +79,13 @@ export function Modal({
         tabIndex={-1}
         className={cn(
           "flex max-h-[92dvh] w-full flex-col overflow-hidden border border-border bg-surface shadow-pop outline-none animate-scale-in",
-          "rounded-t-3xl sm:rounded-3xl",
+          "rounded-t-2xl sm:rounded-2xl",
           SIZES[size],
         )}
       >
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
           <div className="min-w-0">
-            <h2 id={titleId} className="font-display text-xl font-semibold text-fg">
+            <h2 id={titleId} className="font-display text-lg font-semibold text-fg">
               {title}
             </h2>
             {description && <p className="mt-0.5 text-sm text-fg-muted">{description}</p>}

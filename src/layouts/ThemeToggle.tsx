@@ -7,7 +7,7 @@ export function ThemeToggle({ className }: { readonly className?: string }) {
   const toLight = theme === "dark";
   return (
     <IconButton
-      label={toLight ? "Switch to day (light) theme" : "Switch to night (dark) theme"}
+      label={toLight ? "Switch to light mode" : "Switch to dark mode"}
       icon={toLight ? <Sun /> : <Moon />}
       onClick={toggle}
       className={className}

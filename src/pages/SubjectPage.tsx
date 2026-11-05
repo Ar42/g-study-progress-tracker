@@ -94,7 +94,6 @@ export function SubjectPage() {
       />
 
       <Card className="relative overflow-hidden p-5 sm:p-6">
-        <div aria-hidden className="pointer-events-none absolute -top-20 -right-10 size-56 rounded-full bg-primary/12 blur-3xl" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
           <ProgressRing value={subject.stats.percentage} size={96} stroke={8} />
           <div className="min-w-0 flex-1 space-y-3">

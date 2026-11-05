@@ -49,17 +49,13 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Hero */}
       <Card className="relative animate-rise overflow-hidden p-5 sm:p-7">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-primary/15 blur-3xl"
-        />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0 space-y-5">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+              <p className="text-sm font-medium text-fg-subtle">
                 {format(now, "EEEE, d MMMM")}
               </p>
-              <h1 className="font-display text-3xl font-semibold leading-tight text-fg sm:text-4xl">
+              <h1 className="font-display text-2xl font-semibold leading-tight text-fg sm:text-3xl">
                 {greeting(now.getHours())}.
               </h1>
               <p className="max-w-lg text-sm leading-relaxed text-fg-muted sm:text-base">

@@ -1,97 +1,90 @@
-@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hind+Siliguri:wght@400;500;600&family=Noto+Serif+Bengali:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=Noto+Sans+Bengali:wght@400..700&display=swap");
 @import "tailwindcss";
 
 /*
- * "Lamp & paper" — a study desk at night, or a notebook by day.
- *   marigold  = the desk lamp (primary actions, focus)
- *   leaf      = done        river = reading now
- *   terracotta= overdue     stone = not started
- * Components only use the semantic utilities generated in @theme below,
- * so both themes come from these two token blocks.
+ * Professional theme: neutral slate surfaces, one deep-teal accent.
+ *   green = done   amber = in progress   red = overdue   slate = not started
+ * Light is the default; dark is a slate (not black) variant toggled by the user.
+ * Components only use the semantic utilities generated in @theme below.
  */
 
-/* Night (default) */
+/* Light (default) */
 :root,
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --c-bg: #0d1210;
-  --c-surface: #131a17;
-  --c-surface-2: #19221e;
-  --c-surface-3: #222d28;
-  --c-border: rgb(236 228 208 / 0.08);
-  --c-border-strong: rgb(236 228 208 / 0.16);
-  --c-overlay: rgb(4 7 6 / 0.72);
-
-  --c-fg: #efe8d6;
-  --c-fg-muted: #b8b19e;
-  --c-fg-subtle: #878170;
-
-  --c-primary: #eba83a;
-  --c-primary-hover: #f4bb5c;
-  --c-primary-soft: rgb(235 168 58 / 0.13);
-  --c-primary-fg: #1d1404;
-
-  --c-success: #8fc792;
-  --c-success-soft: rgb(143 199 146 / 0.12);
-  --c-info: #7ab8db;
-  --c-info-soft: rgb(122 184 219 / 0.13);
-  --c-warning: #e9be55;
-  --c-warning-soft: rgb(233 190 85 / 0.12);
-  --c-danger: #e8806a;
-  --c-danger-soft: rgb(232 128 106 / 0.13);
-  --c-danger-solid: #c4513a;
-  --c-neutral: #9b9585;
-  --c-neutral-soft: rgb(155 149 133 / 0.13);
-
-  --c-glow: radial-gradient(60rem 30rem at 85% -10%, rgb(235 168 58 / 0.09), transparent 60%);
-  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.025) inset, 0 1px 2px rgb(0 0 0 / 0.35);
-  --shadow-pop: 0 24px 60px -12px rgb(0 0 0 / 0.65);
-  --grain-opacity: 0.035;
-}
-
-/* Paper */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --c-bg: #f3eee2;
-  --c-surface: #fbf8f0;
-  --c-surface-2: #f2ecdf;
-  --c-surface-3: #e8e0cd;
-  --c-border: rgb(70 56 30 / 0.12);
-  --c-border-strong: rgb(70 56 30 / 0.22);
-  --c-overlay: rgb(43 35 20 / 0.38);
+  --c-bg: #f5f7fa;
+  --c-surface: #ffffff;
+  --c-surface-2: #f3f5f8;
+  --c-surface-3: #e6eaf0;
+  --c-border: #e3e7ed;
+  --c-border-strong: #cdd4de;
+  --c-overlay: rgb(15 23 42 / 0.45);
 
-  --c-fg: #221f18;
-  --c-fg-muted: #57514a;
-  --c-fg-subtle: #786f61;
+  --c-fg: #0f172a;
+  --c-fg-muted: #475569;
+  --c-fg-subtle: #64748b;
 
-  --c-primary: #a8650a;
-  --c-primary-hover: #93580a;
-  --c-primary-soft: rgb(168 101 10 / 0.11);
-  --c-primary-fg: #fffaf0;
+  --c-primary: #0e7490;
+  --c-primary-hover: #0c6178;
+  --c-primary-soft: rgb(14 116 144 / 0.09);
+  --c-primary-fg: #ffffff;
 
-  --c-success: #3b7a47;
-  --c-success-soft: rgb(59 122 71 / 0.11);
-  --c-info: #2a6889;
-  --c-info-soft: rgb(42 104 137 / 0.1);
-  --c-warning: #9b6a06;
-  --c-warning-soft: rgb(155 106 6 / 0.11);
-  --c-danger: #b0432b;
-  --c-danger-soft: rgb(176 67 43 / 0.1);
-  --c-danger-solid: #b0432b;
-  --c-neutral: #7a7264;
-  --c-neutral-soft: rgb(122 114 100 / 0.12);
+  --c-success: #15803d;
+  --c-success-soft: rgb(21 128 61 / 0.09);
+  --c-info: #b45309;
+  --c-info-soft: rgb(180 83 9 / 0.09);
+  --c-warning: #b45309;
+  --c-warning-soft: rgb(180 83 9 / 0.09);
+  --c-danger: #b91c1c;
+  --c-danger-soft: rgb(185 28 28 / 0.08);
+  --c-danger-solid: #dc2626;
+  --c-neutral: #64748b;
+  --c-neutral-soft: rgb(100 116 139 / 0.1);
 
-  --c-glow: radial-gradient(60rem 30rem at 85% -10%, rgb(235 168 58 / 0.16), transparent 60%);
-  --shadow-card: 0 1px 2px rgb(70 50 20 / 0.06), 0 6px 20px -12px rgb(70 50 20 / 0.18);
-  --shadow-pop: 0 24px 60px -16px rgb(70 50 20 / 0.35);
-  --grain-opacity: 0.06;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.05);
+  --shadow-pop: 0 20px 48px -12px rgb(16 24 40 / 0.25);
+}
+
+/* Dark — slate, not black */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --c-bg: #0f1623;
+  --c-surface: #161f2e;
+  --c-surface-2: #1c2638;
+  --c-surface-3: #263246;
+  --c-border: rgb(148 163 184 / 0.14);
+  --c-border-strong: rgb(148 163 184 / 0.26);
+  --c-overlay: rgb(2 6 15 / 0.6);
+
+  --c-fg: #e5eaf2;
+  --c-fg-muted: #a5b1c4;
+  --c-fg-subtle: #7f8ca2;
+
+  --c-primary: #2bb0c9;
+  --c-primary-hover: #4cc3d9;
+  --c-primary-soft: rgb(43 176 201 / 0.14);
+  --c-primary-fg: #04222a;
+
+  --c-success: #4ade80;
+  --c-success-soft: rgb(74 222 128 / 0.12);
+  --c-info: #fbbf24;
+  --c-info-soft: rgb(251 191 36 / 0.12);
+  --c-warning: #fbbf24;
+  --c-warning-soft: rgb(251 191 36 / 0.12);
+  --c-danger: #f87171;
+  --c-danger-soft: rgb(248 113 113 / 0.12);
+  --c-danger-solid: #dc2626;
+  --c-neutral: #94a3b8;
+  --c-neutral-soft: rgb(148 163 184 / 0.13);
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.25);
+  --shadow-pop: 0 24px 56px -12px rgb(0 0 0 / 0.55);
 }
 
 @theme {
-  --font-sans: "Figtree", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", "Noto Serif Bengali", Georgia, serif;
+  --font-sans: "Inter", "Noto Sans Bengali", ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: var(--c-bg);
   --color-surface: var(--c-surface);
@@ -150,28 +143,12 @@
   }
   body {
     min-height: 100dvh;
-    background: var(--c-glow), var(--c-bg);
-    background-attachment: fixed;
+    background-color: var(--c-bg);
     color: var(--c-fg);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01";
+    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 200ms ease, color 200ms ease;
-  }
-  /* Paper grain — gives surfaces a tactile, non-digital feel. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  #root {
-    position: relative;
-    z-index: 1;
   }
   ::selection {
     background: var(--c-primary-soft);
@@ -183,25 +160,23 @@
     cursor: pointer;
     opacity: 0.6;
   }
-  :root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
-  :root:not([data-theme]) input[type="date"]::-webkit-calendar-picker-indicator {
+  :root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0.85);
   }
 }
 
-/* Editorial serif for headings (Bengali falls back to Noto Serif Bengali). */
+/* Headings: same family, tighter and heavier. */
 @utility font-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.015em;
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
 }
 
-/* Numbers: the display serif with lining, tabular figures. */
+/* Numbers: tabular figures so columns of numbers line up. */
 @utility font-numbers {
-  font-family: var(--font-display);
-  font-variant-numeric: lining-nums tabular-nums;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {

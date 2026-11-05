@@ -19,6 +19,7 @@ export const useTheme = create<ThemeState>((set, get) => ({
   toggle: () => {
     const next: Theme = get().theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", next);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", next === "dark" ? "#0f1623" : "#f5f7fa");
     try {
       localStorage.setItem(KEY, next);
     } catch {

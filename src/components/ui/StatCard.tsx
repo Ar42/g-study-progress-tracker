@@ -55,7 +55,7 @@ export function StatCard({
     </>
   );
 
-  const base = "flex flex-col rounded-2xl border border-border bg-surface p-4 shadow-card sm:p-5";
+  const base = "flex flex-col rounded-xl border border-border bg-surface p-4 shadow-card sm:p-5";
 
   if (!onClick) return <div className={cn(base, className)}>{content}</div>;
 
@@ -65,7 +65,7 @@ export function StatCard({
       onClick={onClick}
       className={cn(
         base,
-        "group w-full cursor-pointer text-left transition-all hover:-translate-y-0.5 hover:border-border-strong",
+        "group w-full cursor-pointer text-left transition-all hover:border-border-strong",
         "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25",
         className,
       )}
