@@ -1,17 +1,23 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, ArrowRight, BookOpen, Code2 } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, Clock, Code2 } from "lucide-react";
 import { Card, CardHeader, EmptyState, PageHeader, ProgressRing, StatCard } from "../components/ui";
 import { useSubjects, useTopics } from "../features/study/hooks/useStudyData";
-import { FocusPanel } from "../features/dashboard/components/FocusPanel";
+import { FocusModal } from "../features/dashboard/components/FocusModal";
+import { buildFocusGroups, countItems, type FocusStatus } from "../features/dashboard/focus";
 import { DeadlineCard } from "../features/dashboard/components/DeadlineCard";
 import { SubjectGrid } from "../features/bcs/components/SubjectGrid";
 import { collectLeaves, countByStatus, toStats } from "../lib/tree";
-import { ProgressStatus } from "../enums/progress";
 
 export function DashboardPage() {
   const { subjects } = useSubjects();
   const { topics } = useTopics();
+  const [focus, setFocus] = useState<FocusStatus | null>(null);
+
+  const overdue = useMemo(() => buildFocusGroups(subjects, topics, "OVERDUE"), [subjects, topics]);
+  const active = useMemo(() => buildFocusGroups(subjects, topics, "IN_PROGRESS"), [subjects, topics]);
+  const overdueCount = countItems(overdue);
+  const activeCount = countItems(active);
 
   const summary = useMemo(() => {
     const bcsLeaves = subjects.flatMap((s) => collectLeaves(s.children));
@@ -20,7 +26,6 @@ export function DashboardPage() {
     return {
       bcs: toStats(bcsCounts.COMPLETED, bcsLeaves.length),
       it: toStats(itCounts.COMPLETED, topics.length),
-      overdue: bcsCounts.OVERDUE + itCounts.OVERDUE,
       marks: subjects.reduce((n, s) => n + s.marks, 0),
     };
   }, [subjects, topics]);
@@ -29,7 +34,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       <PageHeader title="Dashboard" description="Your BCS and IT preparation at a glance." />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="BCS progress"
           icon={<BookOpen />}
@@ -44,17 +49,27 @@ export function DashboardPage() {
           hint={`${summary.it.completed} of ${summary.it.total} topics`}
           aside={<ProgressRing value={summary.it.percentage} size={44} stroke={4} showLabel={false} />}
         />
-        <StatCard
-          label="Overdue"
-          icon={<AlertTriangle />}
-          tone={summary.overdue > 0 ? "danger" : "success"}
-          value={summary.overdue}
-          hint={summary.overdue > 0 ? "Past their target date" : "Everything on schedule"}
-        />
         <DeadlineCard />
       </div>
 
-      <FocusPanel subjects={subjects} topics={topics} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <StatCard
+          label="Overdue"
+          icon={<AlertTriangle />}
+          tone={overdueCount > 0 ? "danger" : "success"}
+          value={overdueCount}
+          hint={overdueCount > 0 ? "Past their target date · tap to review" : "Everything on schedule"}
+          onClick={() => setFocus("OVERDUE")}
+        />
+        <StatCard
+          label="In progress"
+          icon={<Clock />}
+          tone="warning"
+          value={activeCount}
+          hint={activeCount > 0 ? "Currently studying · tap to review" : "Nothing started yet"}
+          onClick={() => setFocus("IN_PROGRESS")}
+        />
+      </div>
 
       <Card>
         <CardHeader
@@ -76,18 +91,24 @@ export function DashboardPage() {
       >
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-lg border border-primary/25 bg-primary-soft text-primary">
-            <Code2 className="size-[18px]" />
+            <Code2 className="size-4.5" />
           </div>
           <div>
             <p className="text-sm font-medium text-fg">IT topics</p>
             <p className="text-xs text-fg-subtle">
-              {topics.filter((t) => t.status === ProgressStatus.IN_PROGRESS).length} in progress ·{" "}
+              {topics.filter((t) => t.status === "IN_PROGRESS").length} in progress ·{" "}
               {summary.it.total - summary.it.completed} remaining
             </p>
           </div>
         </div>
         <ArrowRight className="size-4 text-fg-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
       </Link>
+
+      <FocusModal
+        status={focus}
+        groups={focus === "OVERDUE" ? overdue : active}
+        onClose={() => setFocus(null)}
+      />
     </div>
   );
 }

@@ -19,6 +19,9 @@ export interface ModalProps {
 
 const SIZES = { sm: "max-w-md", md: "max-w-xl", lg: "max-w-3xl" } as const;
 
+/** Open modals, newest last — only the topmost one reacts to Escape. */
+const openStack: string[] = [];
+
 export function Modal({
   open,
   onClose,
@@ -34,17 +37,23 @@ export function Modal({
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && MODAL_CLOSE_ON_ESCAPE && dismissible) onClose();
-    };
-    const previousOverflow = document.body.style.overflow;
+    openStack.push(titleId);
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", onKey);
+      openStack.splice(openStack.indexOf(titleId), 1);
+      if (openStack.length === 0) document.body.style.overflow = "";
     };
-  }, [open, onClose, dismissible]);
+  }, [open, titleId]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const isTop = openStack[openStack.length - 1] === titleId;
+      if (e.key === "Escape" && isTop && MODAL_CLOSE_ON_ESCAPE && dismissible) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose, dismissible, titleId]);
 
   // Focus the panel (not the first input) unless a child requested autofocus.
   useEffect(() => {
@@ -74,7 +83,7 @@ export function Modal({
           SIZES[size],
         )}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
           <div className="min-w-0">
             <h2 id={titleId} className="text-base font-semibold text-fg">
               {title}
@@ -83,9 +92,9 @@ export function Modal({
           </div>
           <IconButton label="Close" icon={<X />} onClick={onClose} disabled={!dismissible} className="-mr-2 -mt-1" />
         </header>
-        {children && <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>}
+        {children && <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">{children}</div>}
         {footer && (
-          <footer className="flex flex-col-reverse gap-2 border-t border-border bg-surface px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <footer className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-surface px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
             {footer}
           </footer>
         )}
