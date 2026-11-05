@@ -27,7 +27,7 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "flex max-w-full gap-1 overflow-x-auto rounded-lg border border-border bg-surface-2 p-1 [scrollbar-width:none]",
+        "flex max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-surface-2/70 p-1 [scrollbar-width:none]",
         className,
       )}
     >
@@ -41,8 +41,8 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(s.value)}
             className={cn(
-              "inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors",
-              active ? "bg-surface-3 text-fg shadow-sm" : "text-fg-subtle hover:text-fg",
+              "inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors",
+              active ? "bg-surface text-fg shadow-card" : "text-fg-subtle hover:text-fg",
             )}
           >
             {s.label}

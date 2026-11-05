@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
+import { useTheme } from "./lib/theme";
 import { AppShell } from "./layouts/AppShell";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -9,9 +10,10 @@ import { BcsReportPage, ItReportPage } from "./pages/ReportsPage";
 import { LoginPage } from "./pages/LoginPage";
 
 export default function App() {
+  const theme = useTheme((s) => s.theme);
   return (
     <BrowserRouter>
-      <Toaster theme="dark" position="bottom-right" richColors closeButton />
+      <Toaster theme={theme} position="top-center" richColors closeButton />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>

@@ -65,7 +65,7 @@ export function ITPage() {
           className="col-span-2 lg:col-span-1"
         />
         <StatCard label="Completed" icon={<CheckCircle2 />} tone="success" value={counts.COMPLETED} />
-        <StatCard label="In progress" icon={<Clock />} tone="warning" value={counts.IN_PROGRESS} />
+        <StatCard label="In progress" icon={<Clock />} tone="info" value={counts.IN_PROGRESS} />
         <StatCard label="Overdue" icon={<AlertTriangle />} tone="danger" value={counts.OVERDUE} className="col-span-2 sm:col-span-1" />
       </div>
 

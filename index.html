@@ -2,9 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon-study.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>G Study Tracker</title>
+    <link rel="icon" type="image/png" href="/favicon-study.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1210" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f3eee2" media="(prefers-color-scheme: light)" />
+    <title>Study Tracker</title>
+    <script>
+      // Apply the saved (or system) theme before first paint to avoid a flash.
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem("gst.theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

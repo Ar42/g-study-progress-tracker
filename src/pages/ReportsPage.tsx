@@ -62,7 +62,7 @@ export function ItReportPage() {
       <PageHeader title="IT report" description="Status distribution across your IT topics." />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard label="Overall" value={`${stats.percentage}%`} hint={`${stats.completed} of ${stats.total} topics`} />
-        <StatCard label="Active" value={counts.IN_PROGRESS + counts.OVERDUE} hint={`${counts.OVERDUE} overdue`} tone="warning" />
+        <StatCard label="Active" value={counts.IN_PROGRESS + counts.OVERDUE} hint={`${counts.OVERDUE} overdue`} tone="info" />
         <StatCard label="Remaining" value={stats.total - stats.completed} tone="neutral" />
       </div>
       <Card>

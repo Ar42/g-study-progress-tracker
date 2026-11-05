@@ -99,7 +99,7 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
       <div
         {...dragHandlers}
         className={cn(
-          "group relative flex flex-col gap-2 rounded-lg border px-2.5 py-2 transition-colors sm:flex-row sm:items-start sm:gap-3",
+          "group relative flex flex-col gap-2 rounded-xl border px-2.5 py-2.5 transition-colors sm:flex-row sm:items-start sm:gap-3",
           isLeaf ? "border-transparent hover:bg-surface-2" : "border-border bg-surface-2/40 hover:bg-surface-2",
           dnd.overId === row.id && "border-primary/60 bg-primary-soft",
           dnd.dragId === row.id && "opacity-40",

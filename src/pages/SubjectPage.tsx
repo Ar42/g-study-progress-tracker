@@ -11,7 +11,9 @@ import {
   PageHeader,
   ProgressRing,
   SegmentedControl,
+  StatusBar,
 } from "../components/ui";
+import { statusSegments } from "../features/study/statusSegments";
 import { useSubjects } from "../features/study/hooks/useStudyData";
 import { useStudyActions } from "../features/study/hooks/useStudyActions";
 import { ChapterTree } from "../features/bcs/components/ChapterTree";
@@ -68,7 +70,7 @@ export function SubjectPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow={
-          <Link to="/" className="inline-flex items-center gap-1 hover:text-fg">
+          <Link to="/" className="inline-flex items-center gap-1 hover:underline">
             <ChevronLeft className="size-3.5" /> Dashboard
           </Link>
         }
@@ -91,18 +93,23 @@ export function SubjectPage() {
         }
       />
 
-      <Card className="flex flex-col gap-5 p-4 sm:flex-row sm:items-center sm:p-5">
-        <ProgressRing value={subject.stats.percentage} size={72} stroke={6} />
-        <div className="flex-1 space-y-2">
-          <p className="text-sm text-fg-muted">
-            <span className="font-numbers text-fg">{subject.stats.completed}</span> of{" "}
-            <span className="font-numbers text-fg">{subject.stats.total}</span> chapters completed
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {subject.marks > 0 && <Badge tone="primary">{subject.marks} preli marks</Badge>}
-            {counts.OVERDUE > 0 && <Badge tone="danger" dot>{counts.OVERDUE} overdue</Badge>}
-            {counts.IN_PROGRESS > 0 && <Badge tone="warning" dot>{counts.IN_PROGRESS} in progress</Badge>}
-            <Badge tone="neutral" dot>{counts.NOT_STARTED} not started</Badge>
+      <Card className="relative overflow-hidden p-5 sm:p-6">
+        <div aria-hidden className="pointer-events-none absolute -top-20 -right-10 size-56 rounded-full bg-primary/12 blur-3xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
+          <ProgressRing value={subject.stats.percentage} size={96} stroke={8} />
+          <div className="min-w-0 flex-1 space-y-3">
+            <p className="text-sm text-fg-muted">
+              <span className="font-numbers text-2xl text-fg">{subject.stats.completed}</span>
+              <span className="mx-1 text-fg-subtle">/</span>
+              <span className="font-numbers text-fg">{subject.stats.total}</span> chapters completed
+              {subject.marks > 0 && <span className="text-fg-subtle"> · {subject.marks} preli marks</span>}
+            </p>
+            <StatusBar segments={statusSegments(counts)} height="h-2.5" />
+            <div className="flex flex-wrap gap-2">
+              {counts.OVERDUE > 0 && <Badge tone="danger" dot>{counts.OVERDUE} overdue</Badge>}
+              {counts.IN_PROGRESS > 0 && <Badge tone="info" dot>{counts.IN_PROGRESS} in progress</Badge>}
+              <Badge tone="neutral" dot>{counts.NOT_STARTED} not started</Badge>
+            </div>
           </div>
         </div>
       </Card>

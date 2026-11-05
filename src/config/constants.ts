@@ -6,7 +6,7 @@ export const SHEET_NAME: Record<StudyDomain, string> = {
   IT: "IT",
 };
 
-export const COUNTDOWN_LABEL = "Syllabus completion deadline";
+export const COUNTDOWN_LABEL = "Deadline";
 
 /** Modal close behaviour (kept configurable per the original requirements). */
 export const MODAL_CLOSE_ON_ESCAPE = true;

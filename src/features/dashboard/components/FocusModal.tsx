@@ -70,7 +70,7 @@ export function FocusModal({ status, groups, onClose }: FocusModalProps) {
                   {g.items.map((item) => (
                     <li
                       key={item.row.id}
-                      className="flex flex-col gap-2 rounded-lg border border-border bg-surface-2/40 px-3 py-2.5 sm:flex-row sm:items-center"
+                      className="flex flex-col gap-2 rounded-xl border border-border bg-surface-2/50 px-3.5 py-3 sm:flex-row sm:items-center"
                     >
                       <div className="min-w-0 flex-1 space-y-1">
                         <p className={item.status === ProgressStatus.OVERDUE ? "text-sm text-danger" : "text-sm text-fg"}>

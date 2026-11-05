@@ -22,12 +22,12 @@ export type StatusFilter = DisplayStatus | "ALL";
 export interface StatusMeta {
   readonly label: string;
   /** Tailwind token suffix: text-{tone}, bg-{tone}-soft, border-{tone}/30 */
-  readonly tone: "success" | "warning" | "danger" | "neutral";
+  readonly tone: "success" | "info" | "danger" | "neutral";
 }
 
 export const STATUS_META: Record<DisplayStatus, StatusMeta> = {
   NOT_STARTED: { label: "Not started", tone: "neutral" },
-  IN_PROGRESS: { label: "In progress", tone: "warning" },
+  IN_PROGRESS: { label: "In progress", tone: "info" },
   COMPLETED: { label: "Completed", tone: "success" },
   OVERDUE: { label: "Overdue", tone: "danger" },
 };

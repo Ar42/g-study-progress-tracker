@@ -14,7 +14,7 @@ export function Badge({ tone = "neutral", dot = false, icon, className, children
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap [&_svg]:size-3",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap [&_svg]:size-3",
         TONE_CLASS[tone],
         className,
       )}

@@ -8,8 +8,8 @@ const OPTIONS: readonly {
   icon: typeof Circle;
   active: string;
 }[] = [
-  { value: ProgressStatus.NOT_STARTED, label: "Not started", icon: CircleDashed, active: "bg-neutral-soft text-fg" },
-  { value: ProgressStatus.IN_PROGRESS, label: "In progress", icon: Clock, active: "bg-warning-soft text-warning" },
+  { value: ProgressStatus.NOT_STARTED, label: "Not started", icon: CircleDashed, active: "bg-surface text-fg shadow-card" },
+  { value: ProgressStatus.IN_PROGRESS, label: "In progress", icon: Clock, active: "bg-info-soft text-info" },
   { value: ProgressStatus.COMPLETED, label: "Done", icon: Check, active: "bg-success-soft text-success" },
 ];
 
@@ -30,7 +30,7 @@ export function StatusControl({ status, onChange, disabled, showLabels = true }:
     <div
       role="radiogroup"
       aria-label="Status"
-      className="inline-flex shrink-0 items-center rounded-lg border border-border bg-surface-2 p-0.5"
+      className="inline-flex shrink-0 items-center rounded-xl border border-border bg-surface-2/70 p-0.5"
       onClick={(e) => e.stopPropagation()}
     >
       {OPTIONS.map(({ value, label, icon: Icon, active }) => {
@@ -45,7 +45,7 @@ export function StatusControl({ status, onChange, disabled, showLabels = true }:
             disabled={disabled}
             onClick={() => onChange(value)}
             className={cn(
-              "inline-flex h-7 cursor-pointer items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors disabled:cursor-not-allowed",
+              "inline-flex h-7 cursor-pointer items-center gap-1 rounded-lg px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed",
               selected
                 ? overdue && value === ProgressStatus.IN_PROGRESS
                   ? "bg-danger-soft text-danger"

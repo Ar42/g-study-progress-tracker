@@ -1,8 +1,9 @@
 import { cn } from "../../lib/cn";
+import { TONE_FILL, type Tone } from "./styles";
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
-/** Lightweight SVG ring — no chart library needed. */
+/** Lightweight SVG ring. Turns leaf-green at 100%. */
 export function ProgressRing({
   value,
   size = 56,
@@ -40,15 +41,13 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (pct / 100) * c}
-          className="transition-[stroke-dashoffset] duration-700 ease-out"
+          className="transition-[stroke-dashoffset] duration-1000 ease-out"
         />
       </svg>
       {showLabel && (
-        <span
-          className="absolute font-numbers text-fg"
-          style={{ fontSize: Math.max(10, Math.round(size * 0.22)) }}
-        >
-          {pct}%
+        <span className="absolute font-numbers text-fg" style={{ fontSize: Math.max(11, Math.round(size * 0.24)) }}>
+          {pct}
+          <span className="text-[0.6em] text-fg-subtle">%</span>
         </span>
       )}
     </div>
@@ -66,9 +65,52 @@ export function ProgressBar({ value, className }: { readonly value: number; read
       aria-valuemax={100}
     >
       <div
-        className={cn("h-full rounded-full transition-[width] duration-700 ease-out", pct === 100 ? "bg-success" : "bg-primary")}
+        className={cn("h-full rounded-full transition-[width] duration-1000 ease-out", pct === 100 ? "bg-success" : "bg-primary")}
         style={{ width: `${pct}%` }}
       />
+    </div>
+  );
+}
+
+export interface StatusSegment {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number;
+  readonly tone: Tone;
+}
+
+/**
+ * Stacked bar of status counts (done / reading / overdue / not started).
+ * Shows *how* progress is split, not just a single percentage.
+ */
+export function StatusBar({
+  segments,
+  className,
+  height = "h-2",
+}: {
+  readonly segments: readonly StatusSegment[];
+  readonly className?: string;
+  readonly height?: string;
+}) {
+  const total = segments.reduce((n, s) => n + s.value, 0);
+  const label = segments.map((s) => `${s.label}: ${s.value}`).join(", ");
+  return (
+    <div
+      className={cn("flex w-full gap-[2px] overflow-hidden rounded-full bg-surface-3", height, className)}
+      role="img"
+      aria-label={label}
+      title={label}
+    >
+      {total > 0 &&
+        segments
+          .filter((s) => s.value > 0)
+          .map((s) => (
+            <div
+              key={s.key}
+              className={cn("h-full transition-[width] duration-1000 ease-out first:rounded-l-full last:rounded-r-full", TONE_FILL[s.tone])}
+              style={{ width: `${(s.value / total) * 100}%` }}
+            />
+          ))}
     </div>
   );
 }
