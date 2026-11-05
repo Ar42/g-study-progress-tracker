@@ -1,94 +1,89 @@
-import React, { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { AlertTriangle, Menu } from "lucide-react";
+import { Button, IconButton, Spinner } from "../components/ui";
+import { useSubjects } from "../features/study/hooks/useStudyData";
+import { useBcsRows, useItRows } from "../features/study/hooks/useStudyData";
+import { logout } from "../features/auth/session";
+import { useSyncStatus } from "../services/syncStatus";
+import { FOCUS_REFRESH_AFTER_MS } from "../config/constants";
 import { Sidebar } from "./Sidebar";
-import { Menu, RefreshCw } from "lucide-react";
-import { clsx } from "clsx";
-import { useLazyFetchStudyDataQuery, useLazyFetchITStudyDataQuery } from "../services/sheetApi";
-import { useStudyStore } from "../stores/useStudyStore";
-import { toast } from "sonner";
+import { SyncIndicator } from "./SyncIndicator";
 
-export const AppShell: React.FC = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [triggerFetchBCS, { isFetching: isFetchingBCS }] = useLazyFetchStudyDataQuery();
-  const [triggerFetchIT, { isFetching: isFetchingIT }] = useLazyFetchITStudyDataQuery();
-  const setSubjects = useStudyStore((state) => state.setSubjects);
-  const setITTopics = useStudyStore((state) => state.setITTopics);
+export function AppShell() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const bcs = useBcsRows();
+  const it = useItRows();
+  const { subjects } = useSubjects();
+  const fetching = bcs.isFetching || it.isFetching;
+  const { refetch: refetchBcs } = bcs;
+  const { refetch: refetchIt } = it;
 
-  const isFetching = isFetchingBCS || isFetchingIT;
+  const sync = useCallback(() => {
+    void refetchBcs();
+    void refetchIt();
+  }, [refetchBcs, refetchIt]);
 
-  const handleSync = async () => {
-    try {
-      const [bcsData, itData] = await Promise.all([
-        triggerFetchBCS().unwrap().catch(() => null),
-        triggerFetchIT().unwrap().catch(() => null),
-      ]);
-      if (bcsData) {
-        setSubjects(bcsData);
-      }
-      if (itData) {
-        setITTopics(itData);
-      }
-      toast.success("Data synced successfully from Google Sheets!");
-    } catch {
-      toast.error("Failed to sync data from Google Sheets.");
-    }
+  // Pick up changes made elsewhere (phone, the sheet itself) when coming back to the tab.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const { pending, lastSyncedAt } = useSyncStatus.getState();
+      if (pending === 0 && Date.now() - lastSyncedAt > FOCUS_REFRESH_AFTER_MS) sync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [sync]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-bg-base text-text-primary">
-      {/* Mobile Top Navbar */}
-      <header className="lg:hidden flex items-center justify-between px-5 py-4 border-b border-border-subtle bg-bg-surface backdrop-blur-md sticky top-0 z-20">
-        <Link
-          to="/"
-          className="flex items-center gap-3"
-          onClick={() => setIsSidebarOpen(false)}
-        >
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <span className="font-bold text-text-primary text-lg">G</span>
-          </div>
-          <span className="font-bold text-base tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
-            G Study Tracker
-          </span>
-        </Link>
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </header>
-
-      <div className="flex flex-1">
-        {/* Sidebar */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-
-        {/* Content Area */}
-        <main className="flex-1 lg:pl-64 min-w-0 transition-all duration-300">
-          <div className="max-w-6xl mx-auto p-4 md:p-8">
-            <Outlet />
-          </div>
-        </main>
+  let body;
+  if (bcs.isLoading) {
+    body = (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-fg-subtle">
+        <Spinner className="size-6 text-primary" />
+        <p className="text-sm">Loading your progress from Google Sheets…</p>
       </div>
+    );
+  } else if (bcs.error && !bcs.data) {
+    const message = "message" in bcs.error ? String(bcs.error.message) : "Unknown error";
+    body = (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="flex size-11 items-center justify-center rounded-xl bg-danger-soft text-danger">
+          <AlertTriangle className="size-5" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="font-semibold text-fg">Couldn't reach your sheet</h2>
+          <p className="max-w-sm text-sm text-fg-subtle">{message}</p>
+        </div>
+        <Button onClick={sync} loading={fetching}>
+          Try again
+        </Button>
+      </div>
+    );
+  } else {
+    body = <Outlet />;
+  }
 
-      {/* Floating Sync Button */}
-      <button
-        onClick={handleSync}
-        disabled={isFetching}
-        title="Sync Now"
-        className={clsx(
-          "fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-lg transition-all duration-300",
-          isFetching
-            ? "bg-bg-surface border border-border-subtle text-text-muted cursor-not-allowed scale-95"
-            : "bg-primary text-text-primary hover:bg-primary-hover hover:scale-105 hover:shadow-primary/30 shadow-primary/20",
-        )}
-      >
-        <RefreshCw className={clsx("h-6 w-6", isFetching && "animate-spin")} />
-      </button>
+  return (
+    <div className="min-h-dvh bg-bg">
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} subjects={subjects} />
+
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border bg-bg/80 px-4 backdrop-blur-md sm:px-6">
+          <div className="flex items-center gap-2">
+            <IconButton label="Open menu" icon={<Menu />} onClick={() => setMenuOpen(true)} className="-ml-2 lg:hidden" />
+            <span className="text-sm font-semibold text-fg lg:hidden">Study Tracker</span>
+          </div>
+          <SyncIndicator fetching={fetching} onSync={sync} />
+        </header>
+
+        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{body}</main>
+      </div>
     </div>
   );
-};
-AppShell.displayName = "AppShell";
+}

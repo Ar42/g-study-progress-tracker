@@ -1,169 +1,111 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { clsx } from "clsx";
-import {
-  LayoutDashboard,
-  FileSpreadsheet,
-  X,
-  BookOpen,
-  Code,
-  BarChart3,
-} from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { BarChart3, BookOpen, Code2, LayoutDashboard, LogOut, PieChart, X } from "lucide-react";
+import type { ReactNode } from "react";
+import { cn } from "../lib/cn";
+import { IconButton } from "../components/ui";
+import type { Subject } from "../types";
 
-interface SidebarProps {
-  readonly isOpen: boolean;
-  readonly onClose: () => void;
+interface NavItem {
+  readonly to: string;
+  readonly label: string;
+  readonly icon: ReactNode;
+  readonly end?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const location = useLocation();
+const SECTIONS: readonly { title?: string; items: readonly NavItem[] }[] = [
+  { items: [{ to: "/", label: "Dashboard", icon: <LayoutDashboard />, end: true }] },
+  { title: "Study", items: [{ to: "/it", label: "IT topics", icon: <Code2 /> }] },
+  {
+    title: "Reports",
+    items: [
+      { to: "/reports/bcs", label: "BCS report", icon: <BarChart3 /> },
+      { to: "/reports/it", label: "IT report", icon: <PieChart /> },
+    ],
+  },
+];
 
-  const isBcsActive =
-    location.pathname === "/" || location.pathname.startsWith("/subject");
-  const isItActive = location.pathname === "/it";
-  const isBcsReportsActive =
-    location.pathname === "/reports/bcs" || location.pathname === "/reports";
-  const isItReportsActive = location.pathname === "/reports/it";
-
-  const sidebarContent = (
-    <div className="flex h-full flex-col bg-bg-surface border-r border-border-subtle p-5 overflow-y-auto">
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="flex items-center gap-3" onClick={onClose}>
-          <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <span className="font-bold text-text-primary text-xl">G</span>
-          </div>
-          <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
-            G Study Tracker
-          </span>
-        </Link>
-        <button
-          className="lg:hidden p-1.5 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-colors cursor-pointer"
-          onClick={onClose}
-          aria-label="Close menu"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <nav className="flex-1 space-y-6">
-        {/* Main Dashboard Link */}
-        <div className="space-y-1">
-          <Link
-            to="/"
-            onClick={onClose}
-            className={clsx(
-              "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200",
-              location.pathname === "/"
-                ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
-                : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
-            )}
-          >
-            <LayoutDashboard className="h-5 w-5" />
-            <span>Dashboard</span>
-          </Link>
-        </div>
-
-        {/* Study Modules Group */}
-        <div className="space-y-1.5">
-          <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-text-muted">
-            Study Modules
-          </p>
-          <div className="space-y-1 pl-1">
-            <Link
-              to="/"
-              onClick={onClose}
-              className={clsx(
-                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-                isBcsActive && location.pathname !== "/"
-                  ? "bg-primary/15 text-primary border border-primary/25 font-semibold"
-                  : isBcsActive && location.pathname === "/"
-                    ? "text-primary font-semibold"
-                    : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
-              )}
-            >
-              <BookOpen className="h-4.5 w-4.5" />
-              <span>BCS</span>
-            </Link>
-
-            <Link
-              to="/it"
-              onClick={onClose}
-              className={clsx(
-                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-                isItActive
-                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
-                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
-              )}
-            >
-              <Code className="h-4.5 w-4.5" />
-              <span>IT</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Reports Submenu Group */}
-        <div className="space-y-1.5">
-          <p className="px-4 text-[11px] font-bold uppercase tracking-wider text-text-muted">
-            Reports
-          </p>
-          <div className="space-y-1 pl-1">
-            <Link
-              to="/reports/bcs"
-              onClick={onClose}
-              className={clsx(
-                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-                isBcsReportsActive
-                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
-                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
-              )}
-            >
-              <FileSpreadsheet className="h-4.5 w-4.5" />
-              <span>BCS Reports</span>
-            </Link>
-
-            <Link
-              to="/reports/it"
-              onClick={onClose}
-              className={clsx(
-                "flex items-center gap-3 px-3.5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
-                isItReportsActive
-                  ? "bg-primary text-text-primary shadow-lg shadow-primary/15"
-                  : "text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary",
-              )}
-            >
-              <BarChart3 className="h-4.5 w-4.5" />
-              <span>IT Reports</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      <div className="border-t border-border-subtle pt-4 text-xs text-text-muted text-center">
-        v2.0.0 &bull; Multi-Domain Tracker
-      </div>
-    </div>
+const linkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    "flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors [&_svg]:size-4 [&_svg]:shrink-0",
+    isActive ? "bg-surface-3 font-medium text-fg" : "text-fg-muted hover:bg-surface-2 hover:text-fg",
   );
 
+export interface SidebarProps {
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly onLogout: () => void;
+  readonly subjects: readonly Subject[];
+}
+
+export function Sidebar({ open, onClose, onLogout, subjects }: SidebarProps) {
   return (
     <>
-      {/* Mobile Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar Panel */}
+      {open && <div className="fixed inset-0 z-40 bg-black/60 animate-fade-in lg:hidden" onClick={onClose} />}
       <aside
-        className={clsx(
-          "fixed top-0 bottom-0 left-0 z-50 w-64 lg:z-30 transition-transform duration-300 ease-in-out lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-surface transition-transform duration-200 lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        {sidebarContent}
+        <div className="flex h-14 items-center justify-between px-4">
+          <NavLink to="/" onClick={onClose} className="flex items-center gap-2.5">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-fg">
+              G
+            </span>
+            <span className="text-sm font-semibold text-fg">Study Tracker</span>
+          </NavLink>
+          <IconButton label="Close menu" icon={<X />} onClick={onClose} className="lg:hidden" />
+        </div>
+
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-3">
+          {SECTIONS.map((section, i) => (
+            <div key={section.title ?? i} className="space-y-0.5">
+              {section.title && (
+                <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
+                  {section.title}
+                </p>
+              )}
+              {section.items.map((item) => (
+                <NavLink key={item.to} to={item.to} end={item.end} onClick={onClose} className={linkClass}>
+                  {item.icon}
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+
+          {subjects.length > 0 && (
+            <div className="space-y-0.5">
+              <p className="px-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-fg-subtle">
+                BCS subjects
+              </p>
+              {subjects.map((s) => (
+                <NavLink
+                  key={s.row.id}
+                  to={`/subject/${encodeURIComponent(s.row.id)}`}
+                  onClick={onClose}
+                  className={linkClass}
+                >
+                  <BookOpen />
+                  <span className="min-w-0 flex-1 truncate">{s.row.name}</span>
+                  <span className="font-numbers text-[11px] text-fg-subtle">{s.stats.percentage}%</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </nav>
+
+        <div className="border-t border-border p-3">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 text-sm text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </button>
+        </div>
       </aside>
     </>
   );
-};
-Sidebar.displayName = "Sidebar";
+}

@@ -1,14 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { sheetApi } from "../services/sheetApi";
-import { adminApi } from "../services/adminApi";
+import { studyApi } from "../services/studyApi";
 
 export const store = configureStore({
   reducer: {
-    [sheetApi.reducerPath]: sheetApi.reducer,
-    [adminApi.reducerPath]: adminApi.reducer,
+    [studyApi.reducerPath]: studyApi.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(sheetApi.middleware, adminApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(studyApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

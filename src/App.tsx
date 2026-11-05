@@ -1,109 +1,27 @@
-import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { useStudyStore } from "./stores/useStudyStore";
 import { AppShell } from "./layouts/AppShell";
-import { DashboardPage } from "./pages/dashboard/DashboardPage";
-import { SubjectPage } from "./pages/subject/SubjectPage";
-import { ReportsPage } from "./pages/reports/ReportsPage";
-import { LoginPage } from "./pages/login/LoginPage";
-import { ITPage } from "./pages/it/ITPage";
-import { useFetchStudyDataQuery, useFetchITStudyDataQuery } from "./services/sheetApi";
+import { ProtectedRoute } from "./features/auth/ProtectedRoute";
+import { DashboardPage } from "./pages/DashboardPage";
+import { SubjectPage } from "./pages/SubjectPage";
+import { ITPage } from "./pages/ITPage";
+import { BcsReportPage, ItReportPage } from "./pages/ReportsPage";
+import { LoginPage } from "./pages/LoginPage";
 
-function getCookie(name: string): string | null {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(";");
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) === " ") c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-  }
-  return null;
-}
-
-const ProtectedRoute = () => {
-  const isAuthenticated = getCookie("auth_session") === "true";
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
-};
-
-function App() {
-  const { data: bcsData, isLoading: isBCSLoading, error: bcsError } = useFetchStudyDataQuery();
-  const { data: itData } = useFetchITStudyDataQuery();
-  const setSubjects = useStudyStore((state) => state.setSubjects);
-  const setITTopics = useStudyStore((state) => state.setITTopics);
-
-  useEffect(() => {
-    if (bcsData) {
-      setSubjects(bcsData);
-    }
-  }, [bcsData, setSubjects]);
-
-  useEffect(() => {
-    if (itData) {
-      setITTopics(itData);
-    }
-  }, [itData, setITTopics]);
-
-  if (isBCSLoading) {
-    return (
-      <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center space-y-4">
-        <div className="relative h-14 w-14">
-          <div className="absolute inset-0 rounded-full border-4 border-border-subtle" />
-          <div className="absolute inset-0 rounded-full border-4 border-t-primary animate-spin" />
-        </div>
-        <div className="space-y-1 text-center">
-          <h2 className="text-base font-bold text-text-primary">Loading Study Progress</h2>
-          <p className="text-xs text-text-muted">Synchronizing with Google Sheets...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (bcsError) {
-    const errorDetails = 
-      bcsError && typeof bcsError === "object" && "message" in bcsError 
-        ? String((bcsError as any).message) 
-        : "Verify sheet link sharing permissions (Anyone with the link can view).";
-
-    return (
-      <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center p-6 space-y-6">
-        <div className="h-16 w-16 rounded-full bg-status-progress-bg border border-status-progress/20 flex items-center justify-center text-status-progress">
-          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <div className="space-y-2.5 text-center max-w-sm">
-          <h2 className="text-lg font-bold text-text-primary">Connection Failed</h2>
-          <p className="text-xs text-text-secondary leading-relaxed">
-            Failed to sync study tracker data from Google Sheets.
-          </p>
-          <div className="text-[11px] font-mono text-status-progress bg-status-progress-bg/50 border border-status-progress/20 px-3 py-2 rounded-lg break-all">
-            {errorDetails}
-          </div>
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 text-xs font-semibold bg-primary text-text-primary hover:bg-primary-hover rounded-lg transition-colors cursor-pointer shadow-md"
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
-  }
-
+export default function App() {
   return (
     <BrowserRouter>
-      <Toaster theme="dark" richColors position="top-right" />
+      <Toaster theme="dark" position="bottom-right" richColors closeButton />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<AppShell />}>
+          <Route element={<AppShell />}>
             <Route index element={<DashboardPage />} />
             <Route path="subject/:subjectId" element={<SubjectPage />} />
             <Route path="it" element={<ITPage />} />
             <Route path="reports" element={<Navigate to="/reports/bcs" replace />} />
-            <Route path="reports/bcs" element={<ReportsPage domain="BCS" />} />
-            <Route path="reports/it" element={<ReportsPage domain="IT" />} />
+            <Route path="reports/bcs" element={<BcsReportPage />} />
+            <Route path="reports/it" element={<ItReportPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -111,6 +29,3 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;
-
