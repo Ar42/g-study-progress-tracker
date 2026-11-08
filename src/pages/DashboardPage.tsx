@@ -7,6 +7,7 @@ import { useSubjects, useTopics } from "../features/study/hooks/useStudyData";
 import { FocusModal } from "../features/dashboard/components/FocusModal";
 import { buildFocusGroups, countItems, type FocusStatus } from "../features/dashboard/focus";
 import { DeadlineCard } from "../features/dashboard/components/DeadlineCard";
+import { StudyTimeCard } from "../features/targets/components/StudyTimeCard";
 import { SubjectGrid } from "../features/bcs/components/SubjectGrid";
 import { statusSegments } from "../features/study/statusSegments";
 import { collectLeaves, countByStatus, toStats } from "../lib/tree";
@@ -98,6 +99,8 @@ export function DashboardPage() {
           </div>
         </div>
       </Card>
+
+      <StudyTimeCard />
 
       {/* Quick numbers */}
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">

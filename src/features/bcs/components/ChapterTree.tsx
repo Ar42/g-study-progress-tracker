@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from "react";
-import { ChevronRight, GripVertical, Pencil } from "lucide-react";
+import { ChevronRight, GripVertical, Pencil, Play } from "lucide-react";
 import { cn } from "../../../lib/cn";
 import { Badge, IconButton, ProgressBar } from "../../../components/ui";
 import type { StoredStatus } from "../../../enums/progress";
@@ -13,6 +13,8 @@ import { collectLeaves, countByStatus } from "../../../lib/tree";
 export interface ChapterTreeProps {
   readonly nodes: readonly TreeNode[];
   readonly onEdit: (node: TreeNode) => void;
+  /** Start the study timer on a chapter. */
+  readonly onStartTimer?: (node: TreeNode) => void;
   readonly onStatusChange: (node: TreeNode, status: StoredStatus) => void;
   /** Enables drag & drop re-parenting (desktop). */
   readonly onMove?: (draggedId: string, target: TreeNode) => void;
@@ -57,7 +59,7 @@ interface RowProps extends ChapterTreeProps {
 }
 
 function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
-  const { onEdit, onStatusChange, onMove, collapsed, onToggle } = tree;
+  const { onEdit, onStatusChange, onMove, onStartTimer, collapsed, onToggle } = tree;
   const { row, isLeaf, stats, status } = node;
   const open = !collapsed.has(row.id);
   const inside = isLeaf ? null : countByStatus(collectLeaves(node.children).map((l) => l.status));
@@ -181,6 +183,15 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
                 {stats.completed}/{stats.total}
               </span>
             </div>
+          )}
+          {isLeaf && onStartTimer && (
+            <IconButton
+              label={`Start timer on ${row.name}`}
+              icon={<Play />}
+              size="sm"
+              onClick={() => onStartTimer(node)}
+              className="text-primary lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+            />
           )}
           <IconButton
             label={`Edit ${row.name}`}

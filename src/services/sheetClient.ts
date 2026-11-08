@@ -1,8 +1,6 @@
 import { env } from "../config/env";
-import { SHEET_NAME } from "../config/constants";
-import type { StudyDomain } from "../types";
-import { rowsFromCsv, rowsFromTable } from "./rowMapper";
-import type { StudyRow } from "../types";
+import { SHEET_NAME, type SheetKey } from "../config/constants";
+import { parseCsv } from "../lib/csv";
 import { useSyncStatus } from "./syncStatus";
 
 /* ------------------------------------------------------------------ reads */
@@ -35,26 +33,58 @@ function markUnsupported() {
   }
 }
 
-async function readViaScript(domain: StudyDomain): Promise<StudyRow[] | null> {
+/** Raw sheet table: header row first. `missing` is true when the tab doesn't exist yet. */
+export interface SheetTable {
+  readonly rows: string[][];
+  readonly missing: boolean;
+}
+
+interface ReadResponse {
+  readonly status?: string;
+  readonly rows?: string[][];
+  readonly missing?: boolean;
+  readonly version?: number;
+  readonly message?: string;
+}
+
+async function readViaScript(key: SheetKey): Promise<SheetTable | null> {
   if (scriptReadSupported === false) return null;
+  let json: ReadResponse;
   try {
-    const url = `${env.adminUrl}?action=read&sheet=${encodeURIComponent(SHEET_NAME[domain])}`;
+    const url = `${env.adminUrl}?action=read&sheet=${encodeURIComponent(SHEET_NAME[key])}`;
     const res = await fetch(url, { cache: "no-store" });
-    const json = (await res.json()) as { status?: string; rows?: string[][]; message?: string };
-    if (!Array.isArray(json.rows)) {
-      markUnsupported();
-      return null;
-    }
-    scriptReadSupported = true;
-    return rowsFromTable(json.rows);
+    json = (await res.json()) as ReadResponse;
   } catch {
     if (scriptReadSupported === null) markUnsupported();
     return null;
   }
+  // v1 reports "Sheet not found" as an error; v2 reports `missing: true`.
+  if (json.status === "error") {
+    if (/not found/i.test(json.message ?? "")) {
+      useSyncStatus.getState().setScriptVersion(json.version ?? 1);
+      return { rows: [], missing: true };
+    }
+    throw new Error(json.message?.replace(/^Error:\s*/, "") || "Couldn't read the sheet.");
+  }
+  if (!Array.isArray(json.rows)) {
+    markUnsupported();
+    return null;
+  }
+  scriptReadSupported = true;
+  useSyncStatus.getState().setScriptVersion(json.version ?? 1);
+  return { rows: json.rows, missing: Boolean(json.missing) };
 }
 
-async function readViaCsv(domain: StudyDomain): Promise<StudyRow[]> {
-  const base = domain === "IT" ? env.itSheetCsvUrl : env.sheetCsvUrl;
+const CSV_URL: Record<SheetKey, () => string> = {
+  BCS: () => env.sheetCsvUrl,
+  IT: () => env.itSheetCsvUrl,
+  LOG: () => env.logSheetCsvUrl,
+  SESSIONS: () => env.sessionsSheetCsvUrl,
+  SETTINGS: () => env.settingsSheetCsvUrl,
+};
+
+async function readViaCsv(key: SheetKey): Promise<SheetTable> {
+  const base = CSV_URL[key]();
   const url = `${base}${base.includes("?") ? "&" : "?"}_ts=${Date.now()}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Google Sheets responded with ${res.status}.`);
@@ -62,11 +92,11 @@ async function readViaCsv(domain: StudyDomain): Promise<StudyRow[]> {
   if (text.trimStart().startsWith("<")) {
     throw new Error("Sheet is not publicly readable (got an HTML page instead of CSV).");
   }
-  return rowsFromCsv(text);
+  return { rows: parseCsv(text), missing: false };
 }
 
-export async function readRows(domain: StudyDomain): Promise<StudyRow[]> {
-  return (await readViaScript(domain)) ?? (await readViaCsv(domain));
+export async function readTable(key: SheetKey): Promise<SheetTable> {
+  return (await readViaScript(key)) ?? (await readViaCsv(key));
 }
 
 /* ----------------------------------------------------------------- writes */
@@ -79,13 +109,13 @@ interface ScriptResponse {
 }
 
 /**
- * Writes are serialised: Apps Script runs requests concurrently, and the
- * deployed script has no lock, so parallel CREATEs could land on the same row.
+ * Writes are serialised: Apps Script runs requests concurrently, so parallel
+ * CREATEs could otherwise race for the same row.
  */
 let queue: Promise<unknown> = Promise.resolve();
 
-async function post(action: WriteAction, domain: StudyDomain, payload: Record<string, unknown>) {
-  const sheetName = SHEET_NAME[domain];
+async function post(action: WriteAction, key: SheetKey, payload: Record<string, unknown>) {
+  const sheetName = SHEET_NAME[key];
   const res = await fetch(env.adminUrl, {
     method: "POST",
     // text/plain avoids a CORS preflight, which Apps Script cannot answer.
@@ -93,7 +123,7 @@ async function post(action: WriteAction, domain: StudyDomain, payload: Record<st
     // Lets the request finish even if the page reloads or closes mid-save,
     // so there's no need for a "changes may not be saved" prompt.
     keepalive: true,
-    body: JSON.stringify({ action, domain, sheetName, payload: { ...payload, domain, sheetName } }),
+    body: JSON.stringify({ action, domain: key, sheetName, payload: { ...payload, domain: key, sheetName } }),
   });
   if (!res.ok) throw new Error(`Apps Script responded with ${res.status}.`);
   const json = (await res.json()) as ScriptResponse;
@@ -105,12 +135,12 @@ async function post(action: WriteAction, domain: StudyDomain, payload: Record<st
 
 export function writeRow(
   action: WriteAction,
-  domain: StudyDomain,
+  key: SheetKey,
   payload: Record<string, unknown>,
 ): Promise<ScriptResponse> {
   const sync = useSyncStatus.getState();
   sync.beginWrite();
-  const run = queue.then(() => post(action, domain, payload));
+  const run = queue.then(() => post(action, key, payload));
   queue = run.catch(() => undefined);
   return run.then(
     (r) => {

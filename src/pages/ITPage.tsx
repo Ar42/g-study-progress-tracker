@@ -20,6 +20,7 @@ import { countByStatus, toStats } from "../lib/tree";
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from "../enums/progress";
 import { emptyRow } from "../services/rowMapper";
 import { generateRowId } from "../lib/id";
+import { useStartTimer } from "../features/timer/hooks/useActiveSession";
 
 export function ITPage() {
   const { topics, isLoading, error } = useTopics();
@@ -27,6 +28,7 @@ export function ITPage() {
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<TopicEditorState | null>(null);
+  const startTimer = useStartTimer();
 
   const counts = useMemo(() => countByStatus(topics.map((t) => t.status)), [topics]);
   const stats = toStats(counts.COMPLETED, topics.length);
@@ -118,6 +120,7 @@ export function ITPage() {
             numberOf={(id) => position.get(id) ?? 0}
             onEdit={(t) => setEditor({ mode: "edit", row: t.row })}
             onStatusChange={(t, s) => void setStatus(t.row, s)}
+            onStartTimer={(t) => startTimer({ category: "IT", subjectId: "", topicId: t.row.id })}
             onSwap={isFiltering ? undefined : (a, b) => void swap(a, b)}
           />
         )}

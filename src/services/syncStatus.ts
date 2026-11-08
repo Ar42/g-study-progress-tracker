@@ -7,9 +7,12 @@ interface SyncState {
   readonly lastWriteAt: number;
   readonly lastSyncedAt: number;
   readonly lastError: string | null;
+  /** Code.gs version reported by the read endpoint (null until known). */
+  readonly scriptVersion: number | null;
   readonly beginWrite: () => void;
   readonly endWrite: (error?: string) => void;
   readonly markSynced: () => void;
+  readonly setScriptVersion: (v: number) => void;
 }
 
 export const useSyncStatus = create<SyncState>((set) => ({
@@ -17,6 +20,7 @@ export const useSyncStatus = create<SyncState>((set) => ({
   lastWriteAt: 0,
   lastSyncedAt: 0,
   lastError: null,
+  scriptVersion: null,
   beginWrite: () => set((s) => ({ pending: s.pending + 1, lastWriteAt: Date.now() })),
   endWrite: (error) =>
     set((s) => ({
@@ -25,4 +29,5 @@ export const useSyncStatus = create<SyncState>((set) => ({
       lastError: error ?? (s.pending - 1 > 0 ? s.lastError : null),
     })),
   markSynced: () => set({ lastSyncedAt: Date.now() }),
+  setScriptVersion: (v) => set((s) => (s.scriptVersion === v ? s : { scriptVersion: v })),
 }));

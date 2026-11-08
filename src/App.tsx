@@ -8,6 +8,8 @@ import { SubjectPage } from "./pages/SubjectPage";
 import { ITPage } from "./pages/ITPage";
 import { BcsReportPage, ItReportPage } from "./pages/ReportsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { StudyLogPage } from "./pages/StudyLogPage";
+import { StudyTimeReportPage } from "./pages/StudyTimeReportPage";
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
@@ -21,9 +23,11 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="subject/:subjectId" element={<SubjectPage />} />
             <Route path="it" element={<ITPage />} />
+            <Route path="log" element={<StudyLogPage />} />
             <Route path="reports" element={<Navigate to="/reports/bcs" replace />} />
             <Route path="reports/bcs" element={<BcsReportPage />} />
             <Route path="reports/it" element={<ItReportPage />} />
+            <Route path="reports/time" element={<StudyTimeReportPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

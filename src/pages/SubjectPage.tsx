@@ -20,6 +20,7 @@ import { useStudyActions } from "../features/study/hooks/useStudyActions";
 import { ChapterTree } from "../features/bcs/components/ChapterTree";
 import { ChapterEditor, type EditorState } from "../features/bcs/components/ChapterEditor";
 import { QuickAddChaptersModal } from "../features/bcs/components/QuickAddChaptersModal";
+import { useStartTimer } from "../features/timer/hooks/useActiveSession";
 import { useChapterMove } from "../features/bcs/hooks/useChapterMove";
 import { collectLeaves, countByStatus, filterTree } from "../lib/tree";
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from "../enums/progress";
@@ -38,6 +39,7 @@ export function SubjectPage() {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [quickAdd, setQuickAdd] = useState(false);
+  const startTimer = useStartTimer();
 
   const leaves = useMemo(() => (subject ? collectLeaves(subject.children) : []), [subject]);
   const counts = useMemo(() => countByStatus(leaves.map((l) => l.status)), [leaves]);
@@ -175,6 +177,7 @@ export function SubjectPage() {
               }
               onEdit={(node) => setEditor({ mode: "edit", kind: "chapter", row: node.row })}
               onStatusChange={(node, status) => void setStatus(node.row, status)}
+              onStartTimer={(node) => startTimer({ category: "BCS", subjectId: subject.row.id, topicId: node.row.id })}
               onMove={filter === "ALL" ? move : undefined}
             />
           )}

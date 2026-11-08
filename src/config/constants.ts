@@ -1,10 +1,28 @@
 import type { StudyDomain } from "../types";
 
-/** Google Sheet tab that backs each study domain. */
-export const SHEET_NAME: Record<StudyDomain, string> = {
+/** Every sheet tab the app talks to. */
+export type SheetKey = StudyDomain | "LOG" | "SESSIONS" | "SETTINGS";
+
+/** Google Sheet tab that backs each key. */
+export const SHEET_NAME: Record<SheetKey, string> = {
   BCS: "Sheet1",
   IT: "IT",
+  LOG: "Study Log",
+  SESSIONS: "Study Sessions",
+  SETTINGS: "Settings",
 };
+
+/**
+ * Code.gs version the app needs for every feature. v2 adds the Study Log
+ * (generic column writes + auto-created tab). The read endpoint reports it.
+ */
+export const REQUIRED_SCRIPT_VERSION = 2;
+
+/** Code.gs v3 adds the study timer ("Study Sessions") and targets ("Settings"). */
+export const TIMER_SCRIPT_VERSION = 3;
+
+/** Default: ask to confirm sessions longer than this when finishing (minutes). */
+export const DEFAULT_CONFIRM_OVER_MINUTES = 240;
 
 export const COUNTDOWN_LABEL = "Deadline";
 

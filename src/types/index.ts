@@ -58,3 +58,50 @@ export interface Topic {
   readonly row: StudyRow;
   readonly status: DisplayStatus;
 }
+
+/** One Study Log entry (a row of the "Study Log" tab). */
+export interface LogEntry {
+  readonly id: string;
+  /** ISO date (yyyy-mm-dd) the study happened. */
+  readonly date: string;
+  readonly category: StudyDomain;
+  /** BCS only. Name is a snapshot so old logs survive renames/deletes. */
+  readonly subjectId: string;
+  readonly subjectName: string;
+  readonly topicId: string;
+  readonly topicName: string;
+  /** Optional study time in minutes. */
+  readonly minutes: number | null;
+  /** Markdown text. */
+  readonly description: string;
+  /** ISO timestamp, used to order entries within a day. */
+  readonly createdAt: string;
+  /** Set when the entry was created by finishing a timer session. */
+  readonly sessionId: string;
+}
+
+/** A start/pause interval of a timer session (ISO timestamps; end null = running). */
+export interface SessionSegment {
+  readonly start: string;
+  readonly end: string | null;
+}
+
+/** The active study timer (a row of the "Study Sessions" tab). */
+export interface StudySession {
+  readonly id: string;
+  readonly category: StudyDomain;
+  readonly subjectId: string;
+  readonly subjectName: string;
+  readonly topicId: string;
+  readonly topicName: string;
+  readonly segments: readonly SessionSegment[];
+  readonly note: string;
+  readonly updatedAt: string;
+}
+
+/** Study-time targets and preferences (the "Settings" tab, key → value). */
+export interface StudySettings {
+  readonly dailyTargetMinutes: number;
+  readonly weeklyTargetMinutes: number;
+  readonly confirmSessionOverMinutes: number;
+}

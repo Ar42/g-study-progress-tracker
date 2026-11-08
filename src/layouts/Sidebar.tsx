@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, Code2, LayoutDashboard, LogOut, PieChart, X } from "lucide-react";
+import { BarChart3, Code2, LayoutDashboard, LogOut, NotebookPen, PieChart, Timer, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui";
@@ -18,12 +18,14 @@ const SECTIONS: readonly { title?: string; items: readonly NavItem[] }[] = [
   {
     items: [
       { to: "/", label: "Dashboard", icon: <LayoutDashboard />, end: true },
+      { to: "/log", label: "Study log", icon: <NotebookPen /> },
       { to: "/it", label: "IT topics", icon: <Code2 /> },
     ],
   },
   {
     title: "Reports",
     items: [
+      { to: "/reports/time", label: "Study time", icon: <Timer /> },
       { to: "/reports/bcs", label: "BCS report", icon: <BarChart3 /> },
       { to: "/reports/it", label: "IT report", icon: <PieChart /> },
     ],

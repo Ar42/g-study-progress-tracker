@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { useDispatch, useStore } from "react-redux";
+import { studyApi } from "../services/studyApi";
+import type { AppDispatch, RootState } from "../app/store";
 import { Outlet, useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { Button, Spinner } from "../components/ui";
@@ -11,6 +14,10 @@ import { Brand, Sidebar } from "./Sidebar";
 import { MobileNav } from "./MobileNav";
 import { ThemeToggle } from "./ThemeToggle";
 import { SyncIndicator } from "./SyncIndicator";
+import { TimerDock } from "../features/timer/components/TimerDock";
+import { TimerDialogs } from "../features/timer/components/TimerDialogs";
+import { useActiveSession } from "../features/timer/hooks/useActiveSession";
+import { cn } from "../lib/cn";
 
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,14 +25,25 @@ export function AppShell() {
   const bcs = useBcsRows();
   const it = useItRows();
   const { subjects } = useSubjects();
+  // Loads the active study session app-wide (powers the floating timer).
+  const hasSession = Boolean(useActiveSession().session);
   const fetching = bcs.isFetching || it.isFetching;
   const { refetch: refetchBcs } = bcs;
   const { refetch: refetchIt } = it;
 
+  const dispatch = useDispatch<AppDispatch>();
+  const store = useStore<RootState>();
+
   const sync = useCallback(() => {
     void refetchBcs();
     void refetchIt();
-  }, [refetchBcs, refetchIt]);
+    // Refresh the timer and settings, and the study log if it has been loaded this session.
+    void dispatch(studyApi.endpoints.getSessions.initiate(undefined, { subscribe: false, forceRefetch: true }));
+    void dispatch(studyApi.endpoints.getSettings.initiate(undefined, { subscribe: false, forceRefetch: true }));
+    if (studyApi.endpoints.getLog.select()(store.getState()).data) {
+      void dispatch(studyApi.endpoints.getLog.initiate(undefined, { subscribe: false, forceRefetch: true }));
+    }
+  }, [refetchBcs, refetchIt, dispatch, store]);
 
   // Pick up changes made elsewhere (phone, the sheet itself) when coming back to the tab.
   useEffect(() => {
@@ -86,9 +104,13 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl px-4 pt-4 pb-28 sm:px-6 lg:pt-2 lg:pb-12">{body}</main>
+        <main className={cn("mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6 lg:pt-2", hasSession ? "pb-64 lg:pb-48" : "pb-28 lg:pb-12")}>
+          {body}
+        </main>
       </div>
 
+      <TimerDock />
+      <TimerDialogs />
       <MobileNav onOpenMenu={() => setMenuOpen(true)} />
     </div>
   );

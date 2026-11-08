@@ -1,4 +1,4 @@
-import { GripVertical, Pencil } from "lucide-react";
+import { GripVertical, Pencil, Play } from "lucide-react";
 import { cn } from "../../../lib/cn";
 import { IconButton } from "../../../components/ui";
 import type { StoredStatus } from "../../../enums/progress";
@@ -14,12 +14,14 @@ export interface TopicListProps {
   /** Position of each topic in the full (unfiltered) list, for stable numbering. */
   readonly numberOf: (id: string) => number;
   readonly onEdit: (topic: Topic) => void;
+  /** Start the study timer on a topic. */
+  readonly onStartTimer?: (topic: Topic) => void;
   readonly onStatusChange: (topic: Topic, status: StoredStatus) => void;
   /** Enables drag-to-reorder. Pass undefined while filtering. */
   readonly onSwap?: (a: string, b: string) => void;
 }
 
-export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap }: TopicListProps) {
+export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap, onStartTimer }: TopicListProps) {
   const dnd = useDragSwap((a, b) => onSwap?.(a, b));
   const draggable = Boolean(onSwap);
 
@@ -73,6 +75,15 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap }: 
             </div>
             <div className="flex items-center justify-end gap-2">
               <StatusControl status={status} onChange={(s) => onStatusChange(t, s)} />
+              {onStartTimer && (
+                <IconButton
+                  label={`Start timer on ${row.name}`}
+                  icon={<Play />}
+                  size="sm"
+                  onClick={() => onStartTimer(t)}
+                  className="text-primary lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+                />
+              )}
               <IconButton
                 label={`Edit ${row.name}`}
                 icon={<Pencil />}

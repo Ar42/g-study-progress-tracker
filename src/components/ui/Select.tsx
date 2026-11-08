@@ -10,12 +10,19 @@ export interface SelectOption<T extends string = string> {
 
 export interface SelectProps<T extends string> extends Omit<ComponentProps<"select">, "children"> {
   readonly options: readonly SelectOption<T>[];
+  /** Shown (and not selectable) while the value is "". */
+  readonly placeholder?: string;
 }
 
-export function Select<T extends string>({ options, className, ...props }: SelectProps<T>) {
+export function Select<T extends string>({ options, placeholder, className, ...props }: SelectProps<T>) {
   return (
     <div className="relative w-full">
       <select className={cn(controlClass, "h-10 cursor-pointer appearance-none pr-9", className)} {...props}>
+        {placeholder !== undefined && (
+          <option value="" disabled className="bg-surface-2 text-fg-subtle">
+            {placeholder}
+          </option>
+        )}
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-surface-2 text-fg">
             {o.label}

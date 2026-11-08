@@ -1,4 +1,4 @@
-import { normalizeHeader, parseCsv } from "../lib/csv";
+import { normalizeHeader } from "../lib/csv";
 import { normalizeSheetDate } from "../lib/date";
 import { parseStoredStatus } from "../lib/status";
 import type { LinkItem, StudyDomain, StudyRow } from "../types";
@@ -76,10 +76,6 @@ export function rowsFromTable(table: readonly (readonly string[])[]): StudyRow[]
     });
   }
   return rows;
-}
-
-export function rowsFromCsv(csv: string): StudyRow[] {
-  return rowsFromTable(parseCsv(csv));
 }
 
 /**

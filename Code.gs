@@ -14,9 +14,35 @@
  *  - Unknown sheet names are rejected instead of silently writing to the active sheet.
  *  - doGet?action=read&sheet=NAME returns fresh rows as JSON (the app prefers this
  *    over the CSV export, which can lag behind writes).
+ *
+ * v2 (Study Log):
+ *  - Generic writes: every payload field whose name matches a column title
+ *    (ignoring case, spaces and underscores) is written — "createdAt" → "Created At".
+ *    Existing BCS / IT fields map exactly as before.
+ *  - The "IT" and "Study Log" tabs are created with their header row on first write.
+ *  - The read endpoint reports SCRIPT_VERSION, and returns `missing: true` (not an
+ *    error) for a known tab that hasn't been created yet.
+ *
+ * v3 (study timer + targets):
+ *  - New known tabs "Study Sessions" (the active timer) and "Settings" (targets).
+ *  - "Session Id" column for "Study Log".
+ *  - ensureColumns(): before a write to a known tab, any missing header from
+ *    KNOWN_TABS is APPENDED after the last column. Existing columns are never
+ *    moved, renamed or removed.
  */
 
-var IT_HEADERS = ["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links"];
+var SCRIPT_VERSION = 3;
+
+/** Tabs the script may create on first write, with their header rows. */
+var KNOWN_TABS = {
+  "IT": ["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links"],
+  "Study Log": ["Id", "Date", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Minutes", "Description", "Created At", "Session Id"],
+  "Study Sessions": ["Id", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Status", "Segments", "Note", "Updated At"],
+  "Settings": ["Id", "Value"]
+};
+
+/** Request plumbing that must never be written into a cell. */
+var NON_DATA_KEYS = { domain: true, sheetName: true, id1: true, id2: true };
 
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
@@ -26,15 +52,36 @@ function normalizeKey(header) {
   return header === null || header === undefined ? "" : header.toString().toLowerCase().replace(/[\s_]+/g, "");
 }
 
-function resolveSheet(name, createIfIT) {
+function resolveSheet(name, createIfKnown) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(name);
-  if (!sheet && name === "IT" && createIfIT) {
-    sheet = spreadsheet.insertSheet("IT");
-    sheet.getRange(1, 1, 1, IT_HEADERS.length).setValues([IT_HEADERS]);
+  if (!sheet && createIfKnown && KNOWN_TABS[name]) {
+    var headers = KNOWN_TABS[name];
+    sheet = spreadsheet.insertSheet(name);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
+    sheet.setFrozenRows(1);
   }
   if (!sheet) throw new Error("Sheet '" + name + "' not found");
   return sheet;
+}
+
+/** Appends any KNOWN_TABS header missing from row 1 of a known tab (never reorders). */
+function ensureColumns(sheet, name) {
+  var wanted = KNOWN_TABS[name];
+  if (!wanted) return;
+  var lastCol = sheet.getLastColumn();
+  var present = {};
+  if (lastCol > 0) {
+    var row = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    for (var i = 0; i < row.length; i++) present[normalizeKey(row[i])] = true;
+  }
+  var missing = [];
+  for (var j = 0; j < wanted.length; j++) {
+    if (!present[normalizeKey(wanted[j])]) missing.push(wanted[j]);
+  }
+  if (missing.length) {
+    sheet.getRange(1, lastCol + 1, 1, missing.length).setValues([missing]).setFontWeight("bold");
+  }
 }
 
 /* ------------------------------------------------------------------ READ */
@@ -45,37 +92,31 @@ function doGet(e) {
     return json({ status: "success", message: "Google Apps Script Web App is active and healthy." });
   }
   try {
-    var sheet = resolveSheet(params.sheet || "Sheet1", false);
+    var name = params.sheet || "Sheet1";
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+    if (!sheet) {
+      if (KNOWN_TABS[name]) return json({ status: "success", rows: [], missing: true, version: SCRIPT_VERSION });
+      throw new Error("Sheet '" + name + "' not found");
+    }
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
     var rows = lastRow > 0 && lastCol > 0 ? sheet.getRange(1, 1, lastRow, lastCol).getDisplayValues() : [];
-    return json({ status: "success", rows: rows });
+    return json({ status: "success", rows: rows, version: SCRIPT_VERSION });
   } catch (err) {
-    return json({ status: "error", message: err.toString() });
+    return json({ status: "error", message: err.toString(), version: SCRIPT_VERSION });
   }
 }
 
 /* ----------------------------------------------------------------- WRITE */
 
-// payload field → normalised sheet header(s)
-var FIELD_COLUMNS = {
-  id: ["id"],
-  name: ["name"],
-  parentId: ["parentid"],
-  status: ["status"],
-  preliMarks: ["prelimarks"],
-  comments: ["comments"],
-  startedDate: ["starteddate"],
-  targetToCompleteDate: ["targettocompletedate"],
-  completedDate: ["completeddate"],
-  links: ["links", "link"],
-  is_subject: ["issubject"]
-};
+/** Extra column titles a payload field may also be written to. */
+var COLUMN_ALIASES = { links: ["link"] };
 
 function serialize(field, value) {
   if (value === null || value === undefined) return "";
-  if (field === "links") return typeof value === "string" ? value : JSON.stringify(value);
   if (field === "is_subject") return value === true || value === "TRUE" ? "TRUE" : "FALSE";
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+  if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
@@ -95,6 +136,7 @@ function doPost(e) {
     lock.waitLock(30000);
 
     var sheet = resolveSheet(sheetName, true);
+    ensureColumns(sheet, sheetName);
     var lastCol = sheet.getLastColumn();
     if (lastCol < 1) throw new Error("Target sheet has no columns");
 
@@ -122,15 +164,16 @@ function doPost(e) {
      * in the row (including anything the app doesn't know about) is untouched.
      */
     function writeRow(rowNum, data) {
-      for (var field in FIELD_COLUMNS) {
-        if (!Object.prototype.hasOwnProperty.call(data, field)) continue;
-        var aliases = FIELD_COLUMNS[field];
-        for (var a = 0; a < aliases.length; a++) {
-          var col = colOf[aliases[a]];
+      for (var field in data) {
+        if (!Object.prototype.hasOwnProperty.call(data, field) || NON_DATA_KEYS[field]) continue;
+        var keys = [normalizeKey(field)].concat(COLUMN_ALIASES[field] || []);
+        for (var k = 0; k < keys.length; k++) {
+          var col = colOf[keys[k]];
           if (col === undefined) continue;
           var cell = sheet.getRange(rowNum, col + 1);
           cell.setNumberFormat("@");
           cell.setValue(serialize(field, data[field]));
+          break; // write each field to one column only
         }
       }
     }

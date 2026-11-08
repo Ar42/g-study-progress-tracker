@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { BarChart3, BookOpen, Code2, LayoutDashboard } from "lucide-react";
+import { BarChart3, BookOpen, Code2, LayoutDashboard, NotebookPen } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 
@@ -38,6 +38,7 @@ export function MobileNav({ onOpenMenu }: { readonly onOpenMenu: () => void }) {
         <BookOpen />
         Subjects
       </button>
+      {tab("/log", "Log", <NotebookPen />)}
       {tab("/it", "IT", <Code2 />)}
       {tab("/reports/bcs", "Reports", <BarChart3 />, { prefix: "/reports" })}
     </nav>
