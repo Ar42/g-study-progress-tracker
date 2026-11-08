@@ -6,31 +6,21 @@ import { useSyncStatus } from "./syncStatus";
 /* ------------------------------------------------------------------ reads */
 
 /**
- * Newer Code.gs versions expose `doGet?action=read`, which reads straight from
- * the spreadsheet (always fresh). Older deployments don't, so we detect that
- * once and fall back to the public CSV export.
+ * Code.gs exposes `doGet?action=read`, which reads straight from the spreadsheet
+ * (always fresh) and reports the script version. If a very old deployment
+ * answers without rows, we fall back to the public CSV export for the rest of
+ * this page load only — never persisted, so a redeploy is picked up on reload.
+ * A network hiccup is NOT treated as "unsupported": that read falls back to CSV
+ * and the next read tries the script again.
  */
-const PROBE_KEY = "gst.scriptRead.unsupportedAt";
-const PROBE_TTL_MS = 6 * 60 * 60 * 1000; // re-check every 6h, so a redeploy is picked up
+let scriptReadSupported: boolean | null = null;
 
-function probeSaysUnsupported(): boolean {
-  try {
-    const at = Number(localStorage.getItem(PROBE_KEY));
-    return Boolean(at) && Date.now() - at < PROBE_TTL_MS;
-  } catch {
-    return false;
-  }
-}
-
-let scriptReadSupported: boolean | null = probeSaysUnsupported() ? false : null;
-
-function markUnsupported() {
-  scriptReadSupported = false;
-  try {
-    localStorage.setItem(PROBE_KEY, String(Date.now()));
-  } catch {
-    /* storage unavailable — fine, we just probe again next load */
-  }
+// Older builds remembered "unsupported" in localStorage for 6 hours, which kept
+// showing "Update your Apps Script" after a successful redeploy. Clear it.
+try {
+  localStorage.removeItem("gst.scriptRead.unsupportedAt");
+} catch {
+  /* storage unavailable — nothing to clear */
 }
 
 /** Raw sheet table: header row first. `missing` is true when the tab doesn't exist yet. */
@@ -55,7 +45,9 @@ async function readViaScript(key: SheetKey): Promise<SheetTable | null> {
     const res = await fetch(url, { cache: "no-store" });
     json = (await res.json()) as ReadResponse;
   } catch {
-    if (scriptReadSupported === null) markUnsupported();
+    // Network error or a non-JSON reply (e.g. Google's "Script function not found"
+    // page for a wrong/old deployment URL): use CSV this time, retry next time.
+    useSyncStatus.getState().setScriptIssue("unreachable");
     return null;
   }
   // v1 reports "Sheet not found" as an error; v2 reports `missing: true`.
@@ -67,7 +59,9 @@ async function readViaScript(key: SheetKey): Promise<SheetTable | null> {
     throw new Error(json.message?.replace(/^Error:\s*/, "") || "Couldn't read the sheet.");
   }
   if (!Array.isArray(json.rows)) {
-    markUnsupported();
+    // A genuinely old script (no read endpoint): stop asking for this page load.
+    scriptReadSupported = false;
+    useSyncStatus.getState().setScriptIssue("outdated");
     return null;
   }
   scriptReadSupported = true;

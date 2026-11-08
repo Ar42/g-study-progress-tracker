@@ -9,10 +9,17 @@ interface SyncState {
   readonly lastError: string | null;
   /** Code.gs version reported by the read endpoint (null until known). */
   readonly scriptVersion: number | null;
+  /**
+   * Why the script's version is unknown:
+   * "unreachable" = the configured URL didn't answer with JSON (wrong/old deployment URL);
+   * "outdated"    = it answered, but it's a script without the read endpoint.
+   */
+  readonly scriptIssue: "unreachable" | "outdated" | null;
   readonly beginWrite: () => void;
   readonly endWrite: (error?: string) => void;
   readonly markSynced: () => void;
   readonly setScriptVersion: (v: number) => void;
+  readonly setScriptIssue: (issue: "unreachable" | "outdated") => void;
 }
 
 export const useSyncStatus = create<SyncState>((set) => ({
@@ -21,6 +28,7 @@ export const useSyncStatus = create<SyncState>((set) => ({
   lastSyncedAt: 0,
   lastError: null,
   scriptVersion: null,
+  scriptIssue: null,
   beginWrite: () => set((s) => ({ pending: s.pending + 1, lastWriteAt: Date.now() })),
   endWrite: (error) =>
     set((s) => ({
@@ -29,5 +37,7 @@ export const useSyncStatus = create<SyncState>((set) => ({
       lastError: error ?? (s.pending - 1 > 0 ? s.lastError : null),
     })),
   markSynced: () => set({ lastSyncedAt: Date.now() }),
-  setScriptVersion: (v) => set((s) => (s.scriptVersion === v ? s : { scriptVersion: v })),
+  setScriptVersion: (v) => set((s) => (s.scriptVersion === v && s.scriptIssue === null ? s : { scriptVersion: v, scriptIssue: null })),
+  // Only matters while the version is still unknown; a later successful read clears it.
+  setScriptIssue: (issue) => set((s) => (s.scriptVersion !== null || s.scriptIssue === issue ? s : { scriptIssue: issue })),
 }));

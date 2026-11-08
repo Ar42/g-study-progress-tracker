@@ -35,6 +35,7 @@ export function StudyLogPage() {
   const names = useEntryNames();
   const { remove } = useLogActions();
   const scriptVersion = useSyncStatus((s) => s.scriptVersion);
+  const scriptIssue = useSyncStatus((s) => s.scriptIssue);
   const [params, setParams] = useSearchParams();
 
   const [filter, setFilter] = useState<LogFilter>(DEFAULT_FILTER);
@@ -124,11 +125,25 @@ export function StudyLogPage() {
         <Card className="flex items-start gap-3 border-warning/30 bg-warning-soft p-4">
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" />
           <div className="space-y-1 text-sm">
-            <p className="font-semibold text-fg">Update your Apps Script to start logging</p>
-            <p className="text-fg-muted">
-              The Study Log needs the latest <code className="font-mono text-xs">Code.gs</code>. Paste it into Extensions →
-              Apps Script, then Deploy → Manage deployments → edit → Version: <em>New version</em> → Deploy. The URL stays the same.
-            </p>
+            {scriptIssue === "unreachable" ? (
+              <>
+                <p className="font-semibold text-fg">Can't reach your Apps Script</p>
+                <p className="text-fg-muted">
+                  The Apps Script URL this site is built with didn't answer (it may be an old or deleted deployment). Check that{" "}
+                  <code className="font-mono text-xs">VITE_ADMIN_URL</code> in your hosting settings (e.g. Netlify → Environment
+                  variables) is the URL of your current deployment, then redeploy the site.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-fg">Update your Apps Script to start logging</p>
+                <p className="text-fg-muted">
+                  Copy everything in <code className="font-mono text-xs">Code.gs</code> from this project, paste it over the code in
+                  your sheet's Extensions → Apps Script, then Deploy → Manage deployments → edit → Version: <em>New version</em> →
+                  Deploy. The URL stays the same.
+                </p>
+              </>
+            )}
           </div>
         </Card>
       )}
