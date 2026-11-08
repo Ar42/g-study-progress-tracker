@@ -42,6 +42,28 @@ export function useStudyActions(domain: StudyDomain) {
     [createRow, domain, run],
   );
 
+  /**
+   * Adds several rows with a single summary toast. All rows appear instantly;
+   * the writes go to the sheet one after another (CREATE only appends rows).
+   * Resolves to the number of rows saved.
+   */
+  const createMany = useCallback(
+    async (rows: readonly StudyRow[]) => {
+      const results = await Promise.allSettled(rows.map((row) => createRow({ domain, row }).unwrap()));
+      const failed = results.filter((r) => r.status === "rejected");
+      const saved = rows.length - failed.length;
+      if (failed.length === 0) {
+        toast.success(`Added ${saved} ${saved === 1 ? "chapter" : "chapters"}`);
+      } else {
+        toast.error(`${failed.length} of ${rows.length} couldn't be added`, {
+          description: errorMessage((failed[0] as PromiseRejectedResult).reason),
+        });
+      }
+      return saved;
+    },
+    [createRow, domain],
+  );
+
   const update = useCallback(
     (row: StudyRow, success: string | null = "Changes saved") =>
       run(updateRow({ domain, row }).unwrap(), success ?? undefined, `Couldn't save “${row.name}”`),
@@ -72,5 +94,5 @@ export function useStudyActions(domain: StudyDomain) {
     [swapRows, domain, run],
   );
 
-  return { create, update, setStatus, remove, swap };
+  return { create, createMany, update, setStatus, remove, swap };
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChevronLeft, ChevronsDownUp, ChevronsUpDown, FolderSearch, Pencil, Plus, SearchX } from "lucide-react";
+import { ChevronLeft, ChevronsDownUp, ChevronsUpDown, FolderSearch, ListPlus, Pencil, Plus, SearchX } from "lucide-react";
 import {
   Badge,
   Button,
@@ -11,6 +11,7 @@ import {
   PageHeader,
   ProgressRing,
   SegmentedControl,
+  SplitButton,
   StatusBar,
 } from "../components/ui";
 import { statusSegments } from "../features/study/statusSegments";
@@ -18,6 +19,7 @@ import { useSubjects } from "../features/study/hooks/useStudyData";
 import { useStudyActions } from "../features/study/hooks/useStudyActions";
 import { ChapterTree } from "../features/bcs/components/ChapterTree";
 import { ChapterEditor, type EditorState } from "../features/bcs/components/ChapterEditor";
+import { QuickAddChaptersModal } from "../features/bcs/components/QuickAddChaptersModal";
 import { useChapterMove } from "../features/bcs/hooks/useChapterMove";
 import { collectLeaves, countByStatus, filterTree } from "../lib/tree";
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from "../enums/progress";
@@ -35,6 +37,7 @@ export function SubjectPage() {
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [quickAdd, setQuickAdd] = useState(false);
 
   const leaves = useMemo(() => (subject ? collectLeaves(subject.children) : []), [subject]);
   const counts = useMemo(() => countByStatus(leaves.map((l) => l.status)), [leaves]);
@@ -87,9 +90,20 @@ export function SubjectPage() {
         }
         description={subject.row.comments || undefined}
         actions={
-          <Button icon={<Plus className="size-4" />} onClick={openCreate}>
-            Add chapter
-          </Button>
+          <SplitButton
+            label="Add chapter"
+            icon={<Plus className="size-4" />}
+            onClick={openCreate}
+            menuLabel="More ways to add"
+            items={[
+              {
+                label: "Quick add",
+                description: "Add many chapters from a comma-separated list",
+                icon: <ListPlus />,
+                onSelect: () => setQuickAdd(true),
+              },
+            ]}
+          />
         }
       />
 
@@ -168,6 +182,7 @@ export function SubjectPage() {
       </Card>
 
       <ChapterEditor subject={subject} state={editor} onClose={() => setEditor(null)} />
+      <QuickAddChaptersModal subject={subject} open={quickAdd} onClose={() => setQuickAdd(false)} />
     </div>
   );
 }

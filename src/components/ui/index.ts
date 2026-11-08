@@ -10,6 +10,7 @@ export { Modal } from "./Modal";
 export { PageHeader } from "./PageHeader";
 export { ProgressBar, ProgressRing, StatusBar, type StatusSegment } from "./Progress";
 export { SegmentedControl } from "./SegmentedControl";
+export { SplitButton, type SplitButtonItem } from "./SplitButton";
 export { Select } from "./Select";
 export { Spinner } from "./Spinner";
 export { StatCard } from "./StatCard";
