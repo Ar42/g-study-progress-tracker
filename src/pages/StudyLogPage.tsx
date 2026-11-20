@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, CalendarCheck2, Clock, Flame, Info, NotebookPen, Play, Plus, SearchX } from "lucide-react";
 import { Button, Card, ConfirmDialog, EmptyState, PageHeader, Spinner, StatCard } from "../components/ui";
@@ -12,6 +12,7 @@ import { useEntryNames, useLogActions, useLogEntries } from "../features/log/hoo
 import { LogEntryModal, type LogEditorState } from "../features/log/components/LogEntryModal";
 import { LogEntryCard } from "../features/log/components/LogEntryCard";
 import { LogFilters } from "../features/log/components/LogFilters";
+import { filterFromParams, filterToParams, loadSavedFilter, saveFilter } from "../features/log/filterUrl";
 import {
   DEFAULT_FILTER,
   buildSearchIndex,
@@ -38,7 +39,41 @@ export function StudyLogPage() {
   const scriptIssue = useSyncStatus((s) => s.scriptIssue);
   const [params, setParams] = useSearchParams();
 
-  const [filter, setFilter] = useState<LogFilter>(DEFAULT_FILTER);
+  // Filters live in the URL (survive reload / Back / bookmarks) and the last one is remembered.
+  const urlFilter = useMemo(() => filterFromParams(params), [params]);
+  const filter: LogFilter = urlFilter ?? DEFAULT_FILTER;
+  const setFilter = useCallback(
+    (next: LogFilter) => {
+      saveFilter(next);
+      setParams(
+        (prev) => {
+          const p = filterToParams(next);
+          if (prev.has("new")) p.set("new", prev.get("new")!);
+          return p;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+  // Opening /log without filters → restore the last filter you used.
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current) return;
+    restored.current = true;
+    if (urlFilter) return;
+    const saved = loadSavedFilter();
+    if (saved) {
+      setParams(
+        (prev) => {
+          const p = filterToParams(saved);
+          if (prev.has("new")) p.set("new", prev.get("new")!);
+          return p;
+        },
+        { replace: true },
+      );
+    }
+  }, [urlFilter, setParams]);
   // "/log?new=1" (e.g. from the dashboard) opens the form straight away.
   const [editor, setEditor] = useState<LogEditorState | null>(() =>
     params.get("new") === "1" ? { mode: "create" } : null,
@@ -47,7 +82,15 @@ export function StudyLogPage() {
 
   // Drop "?new=1" from the URL so a reload doesn't reopen the form.
   useEffect(() => {
-    if (params.has("new")) setParams({}, { replace: true });
+    if (params.has("new"))
+      setParams(
+        (prev) => {
+          const p = new URLSearchParams(prev);
+          p.delete("new");
+          return p;
+        },
+        { replace: true },
+      );
   }, [params, setParams]);
 
   const today = todayISO();

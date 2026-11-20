@@ -1,5 +1,6 @@
 import { Search, X } from "lucide-react";
-import { DateInput, Input, SegmentedControl, Select } from "../../../components/ui";
+import { DateField, Input, SegmentedControl, Select } from "../../../components/ui";
+import { todayISO } from "../../../lib/date";
 import type { Subject, StudyDomain } from "../../../types";
 import { DEFAULT_FILTER, isDefaultFilter, type LogFilter, type Period } from "../logStats";
 
@@ -56,11 +57,11 @@ export function LogFilters({ value, onChange, subjects, shown, total }: LogFilte
             <>
               <label className="flex flex-col gap-1 text-xs font-semibold text-fg-muted">
                 From
-                <DateInput value={value.from} max={value.to || undefined} onChange={(e) => set({ from: e.target.value })} />
+                <DateField ariaLabel="From date" value={value.from} max={value.to || todayISO()} onChange={(from) => set({ from })} />
               </label>
               <label className="flex flex-col gap-1 text-xs font-semibold text-fg-muted">
                 To
-                <DateInput value={value.to} min={value.from || undefined} onChange={(e) => set({ to: e.target.value })} />
+                <DateField ariaLabel="To date" value={value.to} min={value.from || undefined} onChange={(to) => set({ to })} placeholder="e.g. today" />
               </label>
             </>
           )}

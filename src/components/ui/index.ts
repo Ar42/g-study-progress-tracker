@@ -7,6 +7,7 @@ export { Field } from "./Field";
 export { IconButton } from "./IconButton";
 export { DateInput, Input, Textarea } from "./Input";
 export { DurationInput } from "./DurationInput";
+export { DateField } from "./DateField";
 export { Markdown } from "./Markdown";
 export { MarkdownEditor } from "./MarkdownEditor";
 export { Modal } from "./Modal";
