@@ -9,7 +9,9 @@ import {
   PageHeader,
   ProgressRing,
   SegmentedControl,
-  Spinner,
+  ErrorState,
+  ListSkeleton,
+  StatCardsSkeleton,
   StatCard,
 } from "../components/ui";
 import { useTopics } from "../features/study/hooks/useStudyData";
@@ -23,7 +25,7 @@ import { generateRowId } from "../lib/id";
 import { useStartTimer } from "../features/timer/hooks/useActiveSession";
 
 export function ITPage() {
-  const { topics, isLoading, error } = useTopics();
+  const { topics, isLoading, isFetching, error, refetch } = useTopics();
   const { setStatus, swap } = useStudyActions("IT");
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [query, setQuery] = useState("");
@@ -58,6 +60,9 @@ export function ITPage() {
         }
       />
 
+      {isLoading ? (
+        <StatCardsSkeleton label="Loading IT topics" />
+      ) : (
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Completion"
@@ -70,6 +75,7 @@ export function ITPage() {
         <StatCard label="In progress" icon={<Clock />} tone="info" value={counts.IN_PROGRESS} />
         <StatCard label="Overdue" icon={<AlertTriangle />} tone="danger" value={counts.OVERDUE} className="col-span-2 sm:col-span-1" />
       </div>
+      )}
 
       <Card>
         <CardHeader
@@ -100,11 +106,14 @@ export function ITPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-14 text-primary">
-            <Spinner />
-          </div>
+          <ListSkeleton rows={8} label="Loading IT topics" />
         ) : error && topics.length === 0 ? (
-          <EmptyState icon={<AlertTriangle />} title="Couldn't load the IT sheet" description="Use the refresh button to try again." />
+          <ErrorState
+            title="Couldn't load your IT topics"
+            message={typeof error === "object" && error && "message" in error ? String(error.message) : null}
+            onRetry={refetch}
+            retrying={isFetching}
+          />
         ) : topics.length === 0 ? (
           <EmptyState
             icon={<Code2 />}

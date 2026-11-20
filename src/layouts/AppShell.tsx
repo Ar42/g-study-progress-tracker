@@ -3,8 +3,7 @@ import { useDispatch, useStore } from "react-redux";
 import { studyApi } from "../services/studyApi";
 import type { AppDispatch, RootState } from "../app/store";
 import { Outlet, useNavigate } from "react-router-dom";
-import { AlertTriangle } from "lucide-react";
-import { Button, Spinner } from "../components/ui";
+import { ErrorState, PageSkeleton } from "../components/ui";
 import { useSubjects } from "../features/study/hooks/useStudyData";
 import { useBcsRows, useItRows } from "../features/study/hooks/useStudyData";
 import { logout } from "../features/auth/session";
@@ -63,27 +62,17 @@ export function AppShell() {
 
   let body;
   if (bcs.isLoading) {
-    body = (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-fg-subtle">
-        <Spinner className="size-6 text-primary" />
-        <p className="text-sm">Loading your progress from Google Sheets…</p>
-      </div>
-    );
+    body = <PageSkeleton label="Loading your progress from Google Sheets" />;
   } else if (bcs.error && !bcs.data) {
     const message = "message" in bcs.error ? String(bcs.error.message) : "Unknown error";
     body = (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <div className="flex size-11 items-center justify-center rounded-xl bg-danger-soft text-danger">
-          <AlertTriangle className="size-5" />
-        </div>
-        <div className="space-y-1">
-          <h2 className="font-semibold text-fg">Couldn't reach your sheet</h2>
-          <p className="max-w-sm text-sm text-fg-subtle">{message}</p>
-        </div>
-        <Button onClick={sync} loading={fetching}>
-          Try again
-        </Button>
-      </div>
+      <ErrorState
+        className="min-h-[60vh]"
+        title="Couldn't reach your sheet"
+        message={message}
+        onRetry={sync}
+        retrying={fetching}
+      />
     );
   } else {
     body = <Outlet />;

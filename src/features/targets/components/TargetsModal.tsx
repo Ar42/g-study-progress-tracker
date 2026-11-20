@@ -10,6 +10,7 @@ export function TargetsModal({ onClose }: { readonly onClose: () => void }) {
   const { settings, save } = useSettings();
   const [daily, setDaily] = useState(asText(settings.dailyTargetMinutes));
   const [weekly, setWeekly] = useState(asText(settings.weeklyTargetMinutes));
+  const [weekend, setWeekend] = useState(asText(settings.weekendTargetMinutes));
   const [confirmOver, setConfirmOver] = useState(asText(settings.confirmSessionOverMinutes));
   const [submitted, setSubmitted] = useState(false);
 
@@ -22,13 +23,20 @@ export function TargetsModal({ onClose }: { readonly onClose: () => void }) {
   };
   const d = parse(daily, 24 * 60);
   const w = parse(weekly, 7 * 24 * 60);
+  const we = parse(weekend, 24 * 60);
+  const weekendMin = "minutes" in we ? we.minutes : 0;
   const c = parse(confirmOver, 24 * 60, true);
   const dailyMin = "minutes" in d ? d.minutes : 0;
 
   const submit = async () => {
     setSubmitted(true);
-    if ("error" in d || "error" in w || "error" in c) return;
-    const ok = await save({ dailyTargetMinutes: d.minutes, weeklyTargetMinutes: w.minutes, confirmSessionOverMinutes: c.minutes });
+    if ("error" in d || "error" in w || "error" in we || "error" in c) return;
+    const ok = await save({
+      dailyTargetMinutes: d.minutes,
+      weeklyTargetMinutes: w.minutes,
+      weekendTargetMinutes: we.minutes,
+      confirmSessionOverMinutes: c.minutes,
+    });
     if (ok) onClose();
   };
 
@@ -55,26 +63,34 @@ export function TargetsModal({ onClose }: { readonly onClose: () => void }) {
           void submit();
         }}
       >
-        <Field label="Daily target" htmlFor="t-daily" error={submitted && "error" in d ? d.error : undefined} hint="Leave empty for no daily target.">
+        <Field label="Daily target (weekdays)" htmlFor="t-daily" error={submitted && "error" in d ? d.error : undefined} hint="Sunday – Thursday. Leave empty for no daily target.">
           <DurationInput id="t-daily" value={daily} onChange={setDaily} presets={[60, 120, 180, 240]} />
+        </Field>
+
+        <Field
+          label="Weekend target (Friday & Saturday)"
+          htmlFor="t-weekend"
+          error={submitted && "error" in we ? we.error : undefined}
+          hint="Per weekend day. Leave empty to use the weekday target."
+        >
+          <DurationInput id="t-weekend" value={weekend} onChange={setWeekend} presets={[120, 240, 300, 360]} />
         </Field>
 
         <Field
           label="Weekly target (Sat – Fri)"
           htmlFor="t-weekly"
           error={submitted && "error" in w ? w.error : undefined}
-          hint={!weekly.trim() && dailyMin > 0 ? `Empty = daily × 7 (${formatMinutes(dailyMin * 7)}).` : "A bit under daily × 7 leaves room for a rest day."}
+          hint={
+            !weekly.trim() && dailyMin > 0
+              ? `Empty = ${formatMinutes(dailyMin)} × 5 weekdays + ${formatMinutes(weekendMin || dailyMin)} × 2 weekend days = ${formatMinutes((dailyMin * 5 + (weekendMin || dailyMin) * 2))}.`
+              : "Leave empty to add up your weekday and weekend targets."
+          }
         >
           <div className="flex flex-wrap items-center gap-2">
             <DurationInput id="t-weekly" value={weekly} onChange={setWeekly} presets={[]} />
             {dailyMin > 0 && (
-              <Button variant="soft" size="sm" onClick={() => setWeekly(String(Math.round(dailyMin * 7)))}>
-                Use daily × 7
-              </Button>
-            )}
-            {dailyMin > 0 && (
-              <Button variant="soft" size="sm" onClick={() => setWeekly(String(Math.round(dailyMin * 6)))}>
-                Daily × 6 (1 rest day)
+              <Button variant="soft" size="sm" onClick={() => setWeekly(String(Math.round((dailyMin * 5 + (weekendMin || dailyMin) * 2))))}>
+                Use weekdays + weekend
               </Button>
             )}
           </div>

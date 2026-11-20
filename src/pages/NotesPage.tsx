@@ -1,7 +1,7 @@
 import { useMemo, useState, type DragEvent } from "react";
 import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { AlertTriangle, ChevronRight, FolderInput, FolderPlus, Home, Link2, Pencil, Search, SearchX, Trash2 } from "lucide-react";
-import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, PageHeader, Spinner } from "../components/ui";
+import { Button, Card, ConfirmDialog, EmptyState, ErrorState, IconButton, Input, ListSkeleton, PageHeader } from "../components/ui";
 import { cn } from "../lib/cn";
 import { classifyLink } from "../lib/noteLinks";
 import { canMoveTo, childrenOf, descendantIds, pathTo } from "../lib/noteTree";
@@ -15,7 +15,7 @@ import { MoveNoteModal } from "../features/notes/components/MoveNoteModal";
 const DRAG_TYPE = "application/x-note-id";
 
 export function NotesPage() {
-  const { items, isLoading, error, writable, create, update, move, remove } = useNotes();
+  const { items, isLoading, isFetching, refetch, error, writable, create, update, move, remove } = useNotes();
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<NoteEditorState | null>(null);
@@ -138,11 +138,9 @@ export function NotesPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-14 text-primary">
-            <Spinner />
-          </div>
+          <ListSkeleton rows={6} label="Loading My Drive" trailing={false} />
         ) : error ? (
-          <EmptyState icon={<AlertTriangle />} title="Couldn't load My Drive" description={error} />
+          <ErrorState title="Couldn't load My Drive" message={error} onRetry={refetch} retrying={isFetching} />
         ) : list.length === 0 ? (
           q ? (
             <EmptyState icon={<SearchX />} title="Nothing matches" description="Try another word." />

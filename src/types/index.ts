@@ -103,6 +103,8 @@ export interface StudySession {
 export interface StudySettings {
   readonly dailyTargetMinutes: number;
   readonly weeklyTargetMinutes: number;
+  /** Per weekend day (Fri & Sat). 0 = same as the weekday target. */
+  readonly weekendTargetMinutes: number;
   readonly confirmSessionOverMinutes: number;
 }
 

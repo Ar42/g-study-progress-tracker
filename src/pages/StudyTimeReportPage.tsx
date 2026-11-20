@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { CalendarCheck2, ChevronLeft, ChevronRight, Clock, Gauge, Settings2, Trophy } from "lucide-react";
-import { Button, Card, CardHeader, DateInput, Donut, EmptyState, IconButton, Input, PageHeader, SegmentedControl, Select, StatCard } from "../components/ui";
+import { Button, Card, CardHeader, DateInput, Donut, EmptyState, ErrorState, Skeleton, StatCardsSkeleton, IconButton, Input, PageHeader, SegmentedControl, Select, StatCard } from "../components/ui";
 import { todayISO } from "../lib/date";
 import { formatMinutes } from "../lib/duration";
 import { datesInRange, periodLabel, periodRange, shiftPeriod, type PeriodKind } from "../lib/studyCalendar";
@@ -10,8 +10,9 @@ import { BarList } from "../features/reports/components/BarList";
 import { TimeBars, type TimeBar } from "../features/reports/components/TimeBars";
 import { RatingBadge, TargetMeter } from "../features/targets/components/TargetMeter";
 import { TargetsModal } from "../features/targets/components/TargetsModal";
+import { WeekPlanInfo } from "../features/targets/components/WeekPlanInfo";
 import { useSettings } from "../features/targets/hooks/useSettings";
-import { dailyTarget, hitRate, minutesByDate, periodTarget, summarize, sumRange, weeklyTarget, weeksIn } from "../features/targets/studyTime";
+import { dailyTarget, hitRate, isWeekend, targetForDate, minutesByDate, periodTarget, summarize, sumRange, weeklyTarget, weeksIn } from "../features/targets/studyTime";
 
 const KINDS: { value: PeriodKind; label: string }[] = [
   { value: "day", label: "Day" },
@@ -21,7 +22,7 @@ const KINDS: { value: PeriodKind; label: string }[] = [
 ];
 
 export function StudyTimeReportPage() {
-  const { entries, isLoading } = useLogEntries();
+  const { entries, isLoading, isFetching, error: logError, refetch } = useLogEntries();
   const names = useEntryNames();
   const { settings, writable } = useSettings();
   const today = todayISO();
@@ -47,6 +48,8 @@ export function StudyTimeReportPage() {
         minutes: byDate.get(d) ?? 0,
         muted: d > today,
         current: d === today,
+        // Weekend days are judged against the weekend target (if set).
+        target: isWeekend(d) ? targetForDate(settings, d) || undefined : undefined,
       }));
       return { bars, target: daily, title: kind === "week" ? "Each day · Sat to Fri" : "Each day", labelEvery: kind === "month" ? 5 : 1 };
     }
@@ -180,7 +183,27 @@ export function StudyTimeReportPage() {
         {isCurrent && kind !== "day" && <p className="text-xs text-fg-subtle">In progress · {summary.elapsedDays} of {datesInRange(range).length} days so far</p>}
       </div>
 
-      {isLoading ? null : isFuture ? (
+      {isLoading ? (
+        <div className="space-y-6">
+          <StatCardsSkeleton label="Loading your study time" />
+          <Card className="space-y-3 p-5">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-2 w-full rounded-full" />
+          </Card>
+          <Card className="p-5">
+            <div className="flex h-44 items-end gap-2">
+              {[40, 70, 25, 90, 55, 80, 35].map((h, i) => (
+                <Skeleton key={i} className="flex-1 rounded-t-[4px] rounded-b-none" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+          </Card>
+        </div>
+      ) : logError ? (
+        <Card>
+          <ErrorState title="Couldn't load your study time" message={logError} onRetry={refetch} retrying={isFetching} />
+        </Card>
+      ) : isFuture ? (
         <Card>
           <EmptyState icon={<CalendarCheck2 />} title="This period hasn't started yet" />
         </Card>
@@ -214,6 +237,7 @@ export function StudyTimeReportPage() {
               actual={summary.total}
               target={target?.full ?? null}
               targetToDate={target?.toDate}
+              info={kind === "week" && isCurrent ? <WeekPlanInfo byDate={byDate} settings={settings} today={today} /> : undefined}
             />
             {!target && (
               <p className="mt-2 text-xs text-fg-subtle">
@@ -226,16 +250,6 @@ export function StudyTimeReportPage() {
               </p>
             )}
           </Card>
-
-          {kind !== "day" && (hits.days || hits.weeks) && (
-            <Card>
-              <CardHeader title="Target hit rate" description="Finished days and weeks (plus today / this week once met) since you started logging" />
-              <div className="flex flex-wrap justify-center gap-10 px-4 py-6 sm:justify-around">
-                {hits.days && <Donut title="Daily target" met={hits.days.met} missed={hits.days.missed} unit={["day", "days"]} />}
-                {hits.weeks && kind !== "week" && <Donut title="Weekly target" met={hits.weeks.met} missed={hits.weeks.missed} unit={["week", "weeks"]} />}
-              </div>
-            </Card>
-          )}
 
           {chart && (
             <Card>
@@ -333,6 +347,16 @@ export function StudyTimeReportPage() {
                   </table>
                 </div>
               )}
+            </Card>
+          )}
+
+          {kind !== "day" && (hits.days || hits.weeks) && (
+            <Card>
+              <CardHeader title="Target hit rate" description="Finished days and weeks (plus today / this week once met) since you started logging" />
+              <div className="flex flex-wrap justify-center gap-10 px-4 py-6 sm:justify-around">
+                {hits.days && <Donut title="Daily target" met={hits.days.met} missed={hits.days.missed} unit={["day", "days"]} />}
+                {hits.weeks && kind !== "week" && <Donut title="Weekly target" met={hits.weeks.met} missed={hits.weeks.missed} unit={["week", "weeks"]} />}
+              </div>
             </Card>
           )}
         </>

@@ -14,12 +14,13 @@ import type { EntryNames } from "../logStats";
 const EMPTY: LogEntry[] = [];
 
 export function useLogEntries() {
-  const { data, isLoading, isFetching, error } = useGetLogQuery();
+  const { data, isLoading, isFetching, error, refetch } = useGetLogQuery();
   return {
     entries: data?.entries ?? EMPTY,
     missing: data?.missing ?? false,
     isLoading,
     isFetching,
+    refetch,
     error: error ? ("message" in error ? String(error.message) : "Couldn't load the study log.") : null,
   };
 }

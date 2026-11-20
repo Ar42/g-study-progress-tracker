@@ -5,11 +5,12 @@ import type { StudySettings } from "../types";
 /** "Settings" tab is key/value: Id = setting name, Value = its value. */
 export type SettingKey = keyof StudySettings;
 
-export const SETTING_KEYS: readonly SettingKey[] = ["dailyTargetMinutes", "weeklyTargetMinutes", "confirmSessionOverMinutes"];
+export const SETTING_KEYS: readonly SettingKey[] = ["dailyTargetMinutes", "weeklyTargetMinutes", "weekendTargetMinutes", "confirmSessionOverMinutes"];
 
 export const DEFAULT_SETTINGS: StudySettings = {
   dailyTargetMinutes: 0,
   weeklyTargetMinutes: 0,
+  weekendTargetMinutes: 0,
   confirmSessionOverMinutes: DEFAULT_CONFIRM_OVER_MINUTES,
 };
 
@@ -36,6 +37,7 @@ export function resolveSettings(raw: Record<string, string>): StudySettings {
   return {
     dailyTargetMinutes: num("dailyTargetMinutes"),
     weeklyTargetMinutes: num("weeklyTargetMinutes"),
+    weekendTargetMinutes: num("weekendTargetMinutes"),
     confirmSessionOverMinutes: num("confirmSessionOverMinutes") || DEFAULT_CONFIRM_OVER_MINUTES,
   };
 }

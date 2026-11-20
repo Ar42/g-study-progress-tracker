@@ -22,9 +22,9 @@ export function useSubjects(): { subjects: Subject[]; rows: readonly StudyRow[] 
   return { subjects, rows };
 }
 
-export function useTopics(): { topics: Topic[]; isLoading: boolean; error: unknown } {
-  const { data, isLoading, error } = useItRows();
+export function useTopics(): { topics: Topic[]; isLoading: boolean; isFetching: boolean; error: unknown; refetch: () => void } {
+  const { data, isLoading, isFetching, error, refetch } = useItRows();
   const rows = data ?? EMPTY;
   const topics = useMemo(() => buildTopics(rows, todayISO()), [rows]);
-  return { topics, isLoading, error };
+  return { topics, isLoading, isFetching, error, refetch };
 }

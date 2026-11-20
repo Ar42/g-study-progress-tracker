@@ -1,7 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, CalendarCheck2, Clock, Flame, Info, NotebookPen, Play, Plus, SearchX } from "lucide-react";
-import { Button, Card, ConfirmDialog, EmptyState, PageHeader, Spinner, StatCard } from "../components/ui";
+import { Button, Card, ConfirmDialog, EmptyState, ErrorState, ListSkeleton, PageHeader, StatCardsSkeleton, StatCard } from "../components/ui";
 import { REQUIRED_SCRIPT_VERSION, TIMER_SCRIPT_VERSION } from "../config/constants";
 import { useActiveSession, useStartTimer } from "../features/timer/hooks/useActiveSession";
 import { SessionControls } from "../features/timer/components/SessionControls";
@@ -31,7 +31,7 @@ import type { LogEntry } from "../types";
 const DAYS_PER_BATCH = 14;
 
 export function StudyLogPage() {
-  const { entries, isLoading, error } = useLogEntries();
+  const { entries, isLoading, isFetching, error, refetch } = useLogEntries();
   const { subjects } = useSubjects();
   const names = useEntryNames();
   const { remove } = useLogActions();
@@ -191,6 +191,9 @@ export function StudyLogPage() {
         </Card>
       )}
 
+      {isLoading ? (
+        <StatCardsSkeleton label="Loading your study log" />
+      ) : (
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label="Today"
@@ -214,16 +217,17 @@ export function StudyLogPage() {
         />
         <StatCard label="All time" icon={<NotebookPen />} value={entries.length} hint="Total entries" />
       </div>
+      )}
 
       <LogFilters value={filter} onChange={setFilter} subjects={subjects} shown={filtered.length} total={entries.length} />
 
       {isLoading ? (
-        <div className="flex justify-center py-16 text-primary">
-          <Spinner />
-        </div>
+        <Card>
+          <ListSkeleton rows={6} label="Loading your study log" />
+        </Card>
       ) : error ? (
         <Card>
-          <EmptyState icon={<AlertTriangle />} title="Couldn't load the study log" description={error} />
+          <ErrorState title="Couldn't load your study log" message={error} onRetry={refetch} retrying={isFetching} />
         </Card>
       ) : entries.length === 0 ? (
         <Card>

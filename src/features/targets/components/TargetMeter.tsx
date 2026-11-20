@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Badge } from "../../../components/ui";
 import { cn } from "../../../lib/cn";
 import { formatMinutes } from "../../../lib/duration";
@@ -28,10 +29,12 @@ export interface TargetMeterProps {
   /** Target for the days elapsed so far; rating uses this when the period isn't over. */
   readonly targetToDate?: number;
   readonly extra?: string;
+  /** Optional ⓘ shown next to the rating. */
+  readonly info?: ReactNode;
 }
 
 /** "Today  1h 20m / 3h  [Poor · 44%]" with a progress bar coloured by rating. */
-export function TargetMeter({ label, actual, target, targetToDate, extra }: TargetMeterProps) {
+export function TargetMeter({ label, actual, target, targetToDate, extra, info }: TargetMeterProps) {
   const judgeBy = targetToDate !== undefined && target !== null && targetToDate < target ? targetToDate : target;
   const r = target ? rate(actual, judgeBy ?? 0) : null;
   const pct = target ? Math.min(100, (actual / target) * 100) : 0;
@@ -40,7 +43,12 @@ export function TargetMeter({ label, actual, target, targetToDate, extra }: Targ
     <div className="space-y-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">{label}</p>
-        {target ? <RatingBadge actual={actual} target={judgeBy ?? target} pace={judgeBy !== target} /> : null}
+        {target ? (
+          <span className="flex items-center gap-1">
+            <RatingBadge actual={actual} target={judgeBy ?? target} pace={judgeBy !== target} />
+            {info}
+          </span>
+        ) : null}
       </div>
       <p className="text-sm text-fg-muted">
         <span className="font-numbers text-2xl text-fg">{formatMinutes(actual)}</span>

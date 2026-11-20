@@ -13,7 +13,7 @@ const message = (e: unknown) =>
 
 /** Notes data (orphans shown at top level) plus create / edit / move / delete. */
 export function useNotes() {
-  const { data, isLoading, error } = useGetNotesQuery();
+  const { data, isLoading, isFetching, error, refetch } = useGetNotesQuery();
   const scriptVersion = useSyncStatus((s) => s.scriptVersion);
   const [saveNote] = useSaveNoteMutation();
   const [deleteNotes] = useDeleteNotesMutation();
@@ -75,6 +75,8 @@ export function useNotes() {
     items,
     missing: data?.missing ?? false,
     isLoading,
+    isFetching,
+    refetch,
     error: error ? ("message" in error ? String(error.message) : "Couldn't load notes.") : null,
     writable,
     create,

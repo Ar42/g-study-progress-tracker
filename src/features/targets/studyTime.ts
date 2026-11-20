@@ -16,14 +16,28 @@ export function sumRange(byDate: ReadonlyMap<string, number>, { from, to }: Date
   return total;
 }
 
-/** Daily target, falling back to weekly ÷ 7 when only a weekly target is set. */
+/** Bangladesh weekend: Friday and Saturday (getDay 5 and 6). */
+export const WEEKEND_DAYS: readonly number[] = [5, 6];
+
+export function isWeekend(iso: string): boolean {
+  return WEEKEND_DAYS.includes(new Date(`${iso}T00:00:00`).getDay());
+}
+
+/** Weekday target, falling back to weekly ÷ 7 when only a weekly target is set. */
 export function dailyTarget(s: StudySettings): number {
   return s.dailyTargetMinutes || s.weeklyTargetMinutes / 7;
 }
 
-/** Weekly target, falling back to daily × 7 when only a daily target is set. */
+/** The target for one specific day: the weekend target on Fri/Sat if set, otherwise the weekday target. */
+export function targetForDate(s: StudySettings, iso: string): number {
+  return isWeekend(iso) && s.weekendTargetMinutes > 0 ? s.weekendTargetMinutes : dailyTarget(s);
+}
+
+/** Weekly target; when not set explicitly, 5 weekdays + 2 weekend days of daily targets. */
 export function weeklyTarget(s: StudySettings): number {
-  return s.weeklyTargetMinutes || s.dailyTargetMinutes * 7;
+  if (s.weeklyTargetMinutes) return s.weeklyTargetMinutes;
+  const weekend = s.weekendTargetMinutes || s.dailyTargetMinutes;
+  return s.dailyTargetMinutes * 5 + weekend * 2;
 }
 
 export interface PeriodTarget {
@@ -34,16 +48,19 @@ export interface PeriodTarget {
 }
 
 /**
- * Target for a period. Weeks use the weekly target; months/years use the daily
- * target per day. The current (unfinished) period is judged "on pace" against
- * the days elapsed so far, not the whole period.
+ * Target for a period. Days use their own (weekday/weekend) target; weeks use
+ * the weekly target; months/years add up each day's target. The current
+ * (unfinished) period is judged "on pace" against the days elapsed so far,
+ * weighted by those days' own targets.
  */
 export function periodTarget(kind: PeriodKind, range: DateRange, s: StudySettings, today: string): PeriodTarget | null {
-  const days = datesInRange(range).length;
-  const elapsed = elapsedDays(range, today);
-  const full = kind === "day" ? dailyTarget(s) : kind === "week" ? weeklyTarget(s) : dailyTarget(s) * days;
+  const dates = datesInRange(range);
+  const perDay = dates.map((d) => targetForDate(s, d));
+  const sumAll = perDay.reduce((n, m) => n + m, 0);
+  const sumElapsed = dates.reduce((n, d, i) => (d <= today ? n + perDay[i] : n), 0);
+  const full = kind === "day" ? targetForDate(s, range.from) : kind === "week" ? weeklyTarget(s) : sumAll;
   if (!(full > 0)) return null;
-  return { full, toDate: (full * elapsed) / days };
+  return { full, toDate: sumAll > 0 ? (full * sumElapsed) / sumAll : full };
 }
 
 export interface PeriodSummary {
@@ -109,7 +126,7 @@ export function hitRate(
     let missed = 0;
     for (const d of datesInRange(range)) {
       if (d < firstLogged || d > today) continue;
-      const hit = (byDate.get(d) ?? 0) >= daily;
+      const hit = (byDate.get(d) ?? 0) >= targetForDate(s, d);
       if (hit) met++;
       else if (d < today) missed++;
     }
@@ -129,4 +146,61 @@ export function hitRate(
     weeks = { met, missed };
   }
   return { days, weeks };
+}
+
+export interface WeekPlan {
+  readonly weekly: number;
+  readonly done: number;
+  /** Minutes still needed to reach the weekly target (0 when met). */
+  readonly need: number;
+  readonly daysPassed: number;
+  /** Days still open, today included. */
+  readonly weekdaysLeft: number;
+  readonly weekendLeft: number;
+  readonly daysLeft: number;
+  /** Need ÷ days left. */
+  readonly evenPerDay: number;
+  /** Keep the weekend target on remaining weekend days; weekdays cover the rest. Null without a weekend target or weekdays left. */
+  readonly keepWeekend: { readonly weekendPerDay: number; readonly weekdayPerDay: number } | null;
+  /** How the weekly target is made up, when it comes from daily/weekend targets. */
+  readonly makeup: { readonly weekday: number; readonly weekend: number } | null;
+}
+
+/**
+ * What it takes to still hit this week's (Sat–Fri) target from today on.
+ * Today counts as a day left (it isn't over); what you've logged today is
+ * already in `done`.
+ */
+export function weekPlan(byDate: ReadonlyMap<string, number>, s: StudySettings, today: string): WeekPlan | null {
+  const weekly = weeklyTarget(s);
+  if (!(weekly > 0)) return null;
+  const range = periodRange("week", today);
+  const dates = datesInRange(range);
+  const done = sumRange(byDate, range);
+  const left = dates.filter((d) => d >= today);
+  const weekendLeft = left.filter(isWeekend).length;
+  const weekdaysLeft = left.length - weekendLeft;
+  const need = Math.max(0, weekly - done);
+  const weekendTarget = s.weekendTargetMinutes;
+  let keepWeekend: WeekPlan["keepWeekend"] = null;
+  if (need > 0 && weekendTarget > 0 && weekdaysLeft > 0 && weekendLeft > 0) {
+    // What the remaining weekend days still have to contribute — minus anything already logged on them (e.g. today).
+    const weekendStillDue = left.filter(isWeekend).reduce((n, d) => n + Math.max(0, weekendTarget - (byDate.get(d) ?? 0)), 0);
+    // Weekdays left, also crediting what's already logged on them today.
+    const weekdayLoggedLeft = left.filter((d) => !isWeekend(d)).reduce((n, d) => n + (byDate.get(d) ?? 0), 0);
+    const weekdayNeed = Math.max(0, need - weekendStillDue);
+    keepWeekend = { weekendPerDay: weekendTarget, weekdayPerDay: (weekdayNeed + weekdayLoggedLeft) / weekdaysLeft };
+  }
+  return {
+    weekly,
+    done,
+    need,
+    daysPassed: dates.length - left.length,
+    weekdaysLeft,
+    weekendLeft,
+    daysLeft: left.length,
+    evenPerDay: left.length ? need / left.length : need,
+    keepWeekend,
+    makeup: !s.weeklyTargetMinutes && s.dailyTargetMinutes ? { weekday: s.dailyTargetMinutes, weekend: s.weekendTargetMinutes || s.dailyTargetMinutes } : null,
+  };
 }

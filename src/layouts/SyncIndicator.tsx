@@ -1,7 +1,6 @@
 import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
-import { cn } from "../lib/cn";
 import { IconButton, Spinner } from "../components/ui";
 import { useSyncStatus } from "../services/syncStatus";
 
@@ -24,8 +23,15 @@ export function SyncIndicator({ fetching, onSync }: SyncIndicatorProps) {
   if (pending > 0) {
     content = (
       <>
-        <Spinner className="size-3.5 text-primary" />
+        <Spinner className="text-primary" />
         <span>Saving{pending > 1 ? ` ${pending}` : ""}…</span>
+      </>
+    );
+  } else if (fetching) {
+    content = (
+      <>
+        <Spinner className="text-primary" />
+        <span>Syncing…</span>
       </>
     );
   } else if (lastError) {
@@ -57,7 +63,7 @@ export function SyncIndicator({ fetching, onSync }: SyncIndicatorProps) {
       </div>
       <IconButton
         label="Refresh from Google Sheet"
-        icon={<RefreshCw className={cn(fetching && "animate-spin")} />}
+        icon={<RefreshCw />}
         onClick={onSync}
         disabled={fetching || pending > 0}
       />

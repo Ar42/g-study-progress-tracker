@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3, NotebookPen, Play, Settings2 } from "lucide-react";
-import { Button, Card, IconButton } from "../../../components/ui";
+import { Button, Card, ErrorState, IconButton, Skeleton } from "../../../components/ui";
 import { todayISO } from "../../../lib/date";
 import { formatMinutes } from "../../../lib/duration";
 import { elapsedMs, splitByLocalDay } from "../../../lib/sessionTime";
@@ -13,10 +13,11 @@ import { useSettings } from "../hooks/useSettings";
 import { minutesByDate, periodTarget, sumRange } from "../studyTime";
 import { TargetMeter } from "./TargetMeter";
 import { TargetsModal } from "./TargetsModal";
+import { WeekPlanInfo } from "./WeekPlanInfo";
 
 /** Dashboard card: today and this week (Sat–Fri) against your targets, plus quick start. */
 export function StudyTimeCard() {
-  const { entries } = useLogEntries();
+  const { entries, isLoading: logLoading, isFetching: logFetching, error: logError, refetch: refetchLog } = useLogEntries();
   const { settings, writable } = useSettings();
   const { session, running } = useActiveSession();
   const startTimer = useStartTimer();
@@ -34,6 +35,10 @@ export function StudyTimeCard() {
   const liveTotal = session ? elapsedMs(session.segments, now) / 60000 : 0;
   const liveWeek = session ? splitByLocalDay(session.segments, now).filter((s) => s.date >= week.from).reduce((n, s) => n + s.minutes, 0) : 0;
 
+  // Logged minutes plus whatever is on the running clock, for the week plan.
+  const withLive = new Map(byDate);
+  if (session) for (const s of splitByLocalDay(session.segments, now)) withLive.set(s.date, (withLive.get(s.date) ?? 0) + s.minutes);
+
   const dayT = periodTarget("day", periodRange("day", today), settings, today);
   const weekT = periodTarget("week", week, settings, today);
   const noTargets = !dayT && !weekT;
@@ -50,6 +55,19 @@ export function StudyTimeCard() {
         </div>
       </div>
 
+      {logLoading ? (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" aria-label="Loading study time">
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-2.5">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : logError ? (
+        <ErrorState compact title="Couldn't load your study time" message={logError} onRetry={refetchLog} retrying={logFetching} />
+      ) : (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <TargetMeter
           label="Today"
@@ -62,8 +80,10 @@ export function StudyTimeCard() {
           actual={weekLogged + liveWeek}
           target={weekT?.full ?? null}
           targetToDate={weekT?.toDate}
+          info={<WeekPlanInfo byDate={withLive} settings={settings} today={today} />}
         />
       </div>
+      )}
 
       {noTargets && (
         <p className="mt-4 text-xs text-fg-subtle">

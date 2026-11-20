@@ -12,6 +12,8 @@ export interface TimeBar {
   readonly muted?: boolean;
   /** Outline the current day/month. */
   readonly current?: boolean;
+  /** This bar's own target (e.g. weekend days); defaults to the chart target. */
+  readonly target?: number;
 }
 
 export interface TimeBarsProps {
@@ -49,7 +51,8 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
         <ol className="absolute inset-0 flex items-end gap-[2px]" aria-label="Study time chart">
           {bars.map((b) => {
             const pct = (b.minutes / max) * 100;
-            const met = target ? b.minutes >= target : false;
+            const barTarget = b.target ?? target ?? null;
+            const met = barTarget ? b.minutes >= barTarget : false;
             return (
               <li
                 key={b.key}
@@ -62,7 +65,7 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
                     "w-full max-w-10 rounded-t-[4px] transition-colors",
                     b.muted
                       ? "bg-surface-3"
-                      : !target
+                      : !barTarget
                         ? "bg-primary/75 group-hover:bg-primary group-focus-visible:bg-primary"
                         : met
                           ? "bg-success/80 group-hover:bg-success group-focus-visible:bg-success"
@@ -75,9 +78,9 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden -translate-x-1/2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-center whitespace-nowrap shadow-pop group-hover:block group-focus-visible:block">
                   <p className="text-[11px] text-fg-subtle">{b.title}</p>
                   <p className="font-numbers text-sm text-fg">{b.minutes > 0 ? formatMinutes(b.minutes) : "—"}</p>
-                  {target && !b.muted && (
+                  {barTarget && !b.muted && (
                     <p className={cn("text-[11px] font-semibold", met ? "text-success" : "text-danger")}>
-                      {met ? "✓ target met" : `${formatMinutes(Math.max(0, target - b.minutes))} short`}
+                      {met ? "✓ target met" : `${formatMinutes(Math.max(0, barTarget - b.minutes))} short`}
                     </p>
                   )}
                 </div>
