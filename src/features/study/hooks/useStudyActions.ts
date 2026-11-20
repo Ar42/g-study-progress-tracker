@@ -7,7 +7,8 @@ import {
   useUpdateRowMutation,
 } from "../../../services/studyApi";
 import { withStatus } from "../../../lib/status";
-import { STATUS_META, type StoredStatus } from "../../../enums/progress";
+import { ProgressStatus, STATUS_META, type StoredStatus } from "../../../enums/progress";
+import { celebrate, confirmCompletion } from "../completion";
 import type { StudyDomain, StudyRow } from "../../../types";
 
 const errorMessage = (e: unknown) =>
@@ -64,21 +65,31 @@ export function useStudyActions(domain: StudyDomain) {
     [createRow, domain],
   );
 
+  /** Pass `previousStatus` so a change to Completed is confirmed and celebrated. */
   const update = useCallback(
-    (row: StudyRow, success: string | null = "Changes saved") =>
-      run(updateRow({ domain, row }).unwrap(), success ?? undefined, `Couldn't save “${row.name}”`),
+    async (row: StudyRow, success: string | null = "Changes saved", previousStatus?: StoredStatus) => {
+      const completing = previousStatus !== undefined && previousStatus !== ProgressStatus.COMPLETED && row.status === ProgressStatus.COMPLETED;
+      if (completing && !(await confirmCompletion(row.name))) return false;
+      const ok = await run(updateRow({ domain, row }).unwrap(), completing ? undefined : (success ?? undefined), `Couldn't save “${row.name}”`);
+      if (ok && completing) celebrate(row.name);
+      return ok;
+    },
     [updateRow, domain, run],
   );
 
   const setStatus = useCallback(
-    (row: StudyRow, status: StoredStatus) => {
-      if (row.status === status) return Promise.resolve(true);
-      // No success toast: the row updates instantly and the top bar shows sync state.
-      return run(
+    async (row: StudyRow, status: StoredStatus) => {
+      if (row.status === status) return true;
+      const completing = status === ProgressStatus.COMPLETED;
+      if (completing && !(await confirmCompletion(row.name))) return false;
+      // No toast for other changes: the row updates instantly and the top bar shows sync state.
+      const ok = await run(
         updateRow({ domain, row: withStatus(row, status) }).unwrap(),
         undefined,
         `Couldn't mark “${row.name}” as ${STATUS_META[status].label.toLowerCase()}`,
       );
+      if (ok && completing) celebrate(row.name);
+      return ok;
     },
     [updateRow, domain, run],
   );

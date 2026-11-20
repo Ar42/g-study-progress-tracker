@@ -25,7 +25,7 @@ export function TopicEditor({ state, onClose }: { readonly state: TopicEditorSta
           onSubmit={(row) => {
             onClose();
             if (state.mode === "create") void actions.create(row);
-            else void actions.update(row);
+            else void actions.update(row, undefined, state.row?.status);
           }}
           onDelete={() => setConfirmDelete(state.row)}
         />

@@ -16,6 +16,7 @@ import { SyncIndicator } from "./SyncIndicator";
 import { TimerDock } from "../features/timer/components/TimerDock";
 import { TimerDialogs } from "../features/timer/components/TimerDialogs";
 import { useActiveSession } from "../features/timer/hooks/useActiveSession";
+import { CompletionConfirmHost } from "../features/study/components/CompletionConfirmHost";
 import { cn } from "../lib/cn";
 
 export function AppShell() {
@@ -80,6 +81,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh">
+      <CompletionConfirmHost />
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} onLogout={handleLogout} subjects={subjects} />
 
       <div className="lg:pl-64">

@@ -1,11 +1,10 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, PartyPopper } from "lucide-react";
-import { Button, ConfirmDialog, EmptyState, Modal } from "../../../components/ui";
+import { Button, EmptyState, Modal } from "../../../components/ui";
 import { ProgressStatus } from "../../../enums/progress";
 import { ItemDetails } from "../../study/components/ItemDetails";
 import { useStudyActions } from "../../study/hooks/useStudyActions";
-import { countItems, type FocusGroup, type FocusItem, type FocusStatus } from "../focus";
+import { countItems, type FocusGroup, type FocusStatus } from "../focus";
 
 const COPY: Record<FocusStatus, { title: string; empty: string; emptyHint: string }> = {
   OVERDUE: {
@@ -30,7 +29,6 @@ export interface FocusModalProps {
 export function FocusModal({ status, groups, onClose }: FocusModalProps) {
   const bcs = useStudyActions("BCS");
   const it = useStudyActions("IT");
-  const [confirm, setConfirm] = useState<FocusItem | null>(null);
 
   if (!status) return null;
   const copy = COPY[status];
@@ -82,7 +80,7 @@ export function FocusModal({ status, groups, onClose }: FocusModalProps) {
                         size="sm"
                         variant="secondary"
                         icon={<Check className="size-3.5" />}
-                        onClick={() => setConfirm(item)}
+                        onClick={() => void (item.domain === "IT" ? it : bcs).setStatus(item.row, ProgressStatus.COMPLETED)}
                         className="self-end sm:self-auto"
                       >
                         Mark done
@@ -96,21 +94,6 @@ export function FocusModal({ status, groups, onClose }: FocusModalProps) {
         )}
       </Modal>
 
-      <ConfirmDialog
-        open={confirm !== null}
-        title="Mark as completed?"
-        confirmLabel="Mark done"
-        message={
-          <>
-            <span className="font-medium text-fg">{confirm?.row.name}</span> will be marked completed today.
-          </>
-        }
-        onCancel={() => setConfirm(null)}
-        onConfirm={() => {
-          if (confirm) void (confirm.domain === "IT" ? it : bcs).setStatus(confirm.row, ProgressStatus.COMPLETED);
-          setConfirm(null);
-        }}
-      />
     </>
   );
 }

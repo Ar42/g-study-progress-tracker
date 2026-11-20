@@ -42,7 +42,7 @@ export function SubjectCard({ subject, dragging, dropTarget, dragHandlers }: Sub
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-display text-base font-semibold leading-snug text-fg wrap-break-word">{row.name}</h3>
+          <h3 className={cn("font-display text-base font-semibold leading-snug wrap-break-word", done ? "text-success" : "text-fg")}>{row.name}</h3>
           <p className="mt-1 text-xs text-fg-subtle">
             {subject.marks > 0 ? `${subject.marks} marks` : "Marks not set"}
             {!empty && ` · ${stats.total} chapters`}

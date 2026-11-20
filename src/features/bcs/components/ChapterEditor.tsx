@@ -41,7 +41,7 @@ export function ChapterEditor({ subject, state, onClose }: ChapterEditorProps) {
           onSubmit={(row) => {
             onClose();
             if (state.mode === "create") void actions.create(row);
-            else void actions.update(row);
+            else void actions.update(row, undefined, state.row?.status);
           }}
           onDelete={state.kind === "chapter" ? () => setConfirmDelete(state.row) : undefined}
           deleteDisabledReason={hasChildren ? "Move or delete the chapters inside it first" : undefined}

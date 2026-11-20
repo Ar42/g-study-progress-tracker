@@ -5,7 +5,7 @@ import type { DisplayStatus } from "../../enums/progress";
  * One place that decides how a status *looks* on a list row, so every list
  * (chapter tree, IT topics, …) reads the same at a glance:
  *   in progress → amber rail + tint + clock     overdue → red rail + tint + alert
- *   completed   → green check, muted text        not started → plain, dashed circle
+ *   completed   → green check, green name        not started → plain, dashed circle
  */
 export const STATUS_ROW: Record<DisplayStatus, { row: string; name: string; icon: string }> = {
   IN_PROGRESS: {
@@ -20,7 +20,7 @@ export const STATUS_ROW: Record<DisplayStatus, { row: string; name: string; icon
   },
   COMPLETED: {
     row: "before:bg-success/0",
-    name: "text-fg-muted line-through decoration-fg-subtle/50",
+    name: "font-medium text-success",
     icon: "text-success",
   },
   NOT_STARTED: {

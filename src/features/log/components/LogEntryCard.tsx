@@ -10,7 +10,7 @@ const LONG = 420; // characters before the note is collapsed
 
 export interface LogEntryCardProps {
   readonly entry: LogEntry;
-  readonly names: EntryNames & { exists: boolean };
+  readonly names: EntryNames & { exists: boolean; completed?: boolean };
   readonly onEdit: (entry: LogEntry) => void;
   readonly onDelete: (entry: LogEntry) => void;
 }
@@ -35,7 +35,7 @@ export const LogEntryCard = memo(function LogEntryCard({ entry, names, onEdit, o
                 <ChevronRight className="size-3.5 text-fg-subtle" />
               </>
             )}
-            <span className={cn("font-semibold text-fg", !names.exists && "text-fg-muted")} title={names.exists ? undefined : "This topic no longer exists"}>
+            <span className={cn("font-semibold", !names.exists ? "text-fg-muted" : names.completed ? "text-success" : "text-fg")} title={names.exists ? undefined : "This topic no longer exists"}>
               {names.topic}
             </span>
           </p>

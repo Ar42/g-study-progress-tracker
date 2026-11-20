@@ -29,7 +29,7 @@ export function useLogEntries() {
  * Resolves an entry's subject/topic to their *current* names (so renames show
  * up), falling back to the names saved with the entry if they were deleted.
  */
-export function useEntryNames(): (e: LogEntry) => EntryNames & { exists: boolean } {
+export function useEntryNames(): (e: LogEntry) => EntryNames & { exists: boolean; completed: boolean } {
   const { subjects } = useSubjects();
   const { topics } = useTopics();
 
@@ -39,7 +39,7 @@ export function useEntryNames(): (e: LogEntry) => EntryNames & { exists: boolean
     return (e: LogEntry) => {
       if (e.category === "IT") {
         const t = topicById.get(e.topicId);
-        return { subject: "IT", topic: t?.row.name ?? e.topicName, exists: Boolean(t) };
+        return { subject: "IT", topic: t?.row.name ?? e.topicName, exists: Boolean(t), completed: t?.status === "COMPLETED" };
       }
       const s = subjectById.get(e.subjectId);
       const node = s ? findNode(s.children, e.topicId) : null;
@@ -47,6 +47,7 @@ export function useEntryNames(): (e: LogEntry) => EntryNames & { exists: boolean
         subject: s?.row.name ?? e.subjectName,
         topic: node?.row.name ?? e.topicName,
         exists: Boolean(node),
+        completed: node?.status === "COMPLETED",
       };
     };
   }, [subjects, topics]);

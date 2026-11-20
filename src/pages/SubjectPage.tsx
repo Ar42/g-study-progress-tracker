@@ -81,7 +81,7 @@ export function SubjectPage() {
         }
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
-            {subject.row.name}
+            <span className={subject.stats.percentage === 100 && subject.stats.total > 0 ? "text-success" : undefined}>{subject.row.name}</span>
             <IconButton
               label="Edit subject details"
               icon={<Pencil />}
