@@ -60,7 +60,13 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
                 <div
                   className={cn(
                     "w-full max-w-10 rounded-t-[4px] transition-colors",
-                    b.muted ? "bg-surface-3" : "bg-primary/75 group-hover:bg-primary group-focus-visible:bg-primary",
+                    b.muted
+                      ? "bg-surface-3"
+                      : !target
+                        ? "bg-primary/75 group-hover:bg-primary group-focus-visible:bg-primary"
+                        : met
+                          ? "bg-success/80 group-hover:bg-success group-focus-visible:bg-success"
+                          : "bg-danger/80 group-hover:bg-danger group-focus-visible:bg-danger",
                     b.current && "ring-2 ring-primary/40 ring-offset-1 ring-offset-surface",
                   )}
                   style={{ height: b.minutes > 0 ? `max(${pct}%, 3px)` : 0 }}
@@ -69,7 +75,11 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 hidden -translate-x-1/2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-center whitespace-nowrap shadow-pop group-hover:block group-focus-visible:block">
                   <p className="text-[11px] text-fg-subtle">{b.title}</p>
                   <p className="font-numbers text-sm text-fg">{b.minutes > 0 ? formatMinutes(b.minutes) : "—"}</p>
-                  {met && <p className="text-[11px] font-semibold text-success">✓ target met</p>}
+                  {target && !b.muted && (
+                    <p className={cn("text-[11px] font-semibold", met ? "text-success" : "text-danger")}>
+                      {met ? "✓ target met" : `${formatMinutes(Math.max(0, target - b.minutes))} short`}
+                    </p>
+                  )}
                 </div>
               </li>
             );
@@ -87,6 +97,16 @@ export function TimeBars({ bars, target, targetLabel = "Target", labelEvery = 1,
           </span>
         ))}
       </div>
+      {target ? (
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-fg-muted" aria-label="Legend">
+          <li className="flex items-center gap-1.5">
+            <span className="size-2 rounded-sm bg-success" /> Met target
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span className="size-2 rounded-sm bg-danger" /> Below target
+          </li>
+        </ul>
+      ) : null}
     </figure>
   );
 }

@@ -82,3 +82,51 @@ export function weeksIn({ from, to }: DateRange): DateRange[] {
   }
   return out.reverse();
 }
+
+export interface HitCount {
+  readonly met: number;
+  readonly missed: number;
+}
+
+/**
+ * How many days / weeks in `range` hit their target. Only finished days and
+ * weeks count — plus the current one if it's already met — and nothing before
+ * `firstLogged` (you weren't tracking yet). Null when no target is set.
+ */
+export function hitRate(
+  byDate: ReadonlyMap<string, number>,
+  range: DateRange,
+  s: StudySettings,
+  today: string,
+  firstLogged: string,
+): { days: HitCount | null; weeks: HitCount | null } {
+  const daily = dailyTarget(s);
+  const weekly = weeklyTarget(s);
+
+  let days: HitCount | null = null;
+  if (daily > 0) {
+    let met = 0;
+    let missed = 0;
+    for (const d of datesInRange(range)) {
+      if (d < firstLogged || d > today) continue;
+      const hit = (byDate.get(d) ?? 0) >= daily;
+      if (hit) met++;
+      else if (d < today) missed++;
+    }
+    days = { met, missed };
+  }
+
+  let weeks: HitCount | null = null;
+  if (weekly > 0) {
+    let met = 0;
+    let missed = 0;
+    for (const w of weeksIn(range)) {
+      if (w.to < firstLogged || w.from > today) continue;
+      const hit = sumRange(byDate, w) >= weekly;
+      if (hit) met++;
+      else if (w.to < today) missed++;
+    }
+    weeks = { met, missed };
+  }
+  return { days, weeks };
+}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { CalendarCheck2, ChevronLeft, ChevronRight, Clock, Gauge, Settings2, Trophy } from "lucide-react";
-import { Button, Card, CardHeader, DateInput, EmptyState, IconButton, Input, PageHeader, SegmentedControl, Select, StatCard } from "../components/ui";
+import { Button, Card, CardHeader, DateInput, Donut, EmptyState, IconButton, Input, PageHeader, SegmentedControl, Select, StatCard } from "../components/ui";
 import { todayISO } from "../lib/date";
 import { formatMinutes } from "../lib/duration";
 import { datesInRange, periodLabel, periodRange, shiftPeriod, type PeriodKind } from "../lib/studyCalendar";
@@ -11,7 +11,7 @@ import { TimeBars, type TimeBar } from "../features/reports/components/TimeBars"
 import { RatingBadge, TargetMeter } from "../features/targets/components/TargetMeter";
 import { TargetsModal } from "../features/targets/components/TargetsModal";
 import { useSettings } from "../features/targets/hooks/useSettings";
-import { dailyTarget, minutesByDate, periodTarget, summarize, sumRange, weeklyTarget, weeksIn } from "../features/targets/studyTime";
+import { dailyTarget, hitRate, minutesByDate, periodTarget, summarize, sumRange, weeklyTarget, weeksIn } from "../features/targets/studyTime";
 
 const KINDS: { value: PeriodKind; label: string }[] = [
   { value: "day", label: "Day" },
@@ -101,6 +101,7 @@ export function StudyTimeReportPage() {
 
   /* ------------------------------------------------------ week by week */
   const firstLogged = useMemo(() => entries.reduce((min, e) => (e.minutes && e.date < min ? e.date : min), today), [entries, today]);
+  const hits = useMemo(() => hitRate(byDate, range, settings, today, firstLogged), [byDate, range, settings, today, firstLogged]);
   const weeks = useMemo(() => {
     const span =
       kind === "month" || kind === "year"
@@ -225,6 +226,16 @@ export function StudyTimeReportPage() {
               </p>
             )}
           </Card>
+
+          {kind !== "day" && (hits.days || hits.weeks) && (
+            <Card>
+              <CardHeader title="Target hit rate" description="Finished days and weeks (plus today / this week once met) since you started logging" />
+              <div className="flex flex-wrap justify-center gap-10 px-4 py-6 sm:justify-around">
+                {hits.days && <Donut title="Daily target" met={hits.days.met} missed={hits.days.missed} unit={["day", "days"]} />}
+                {hits.weeks && kind !== "week" && <Donut title="Weekly target" met={hits.weeks.met} missed={hits.weeks.missed} unit={["week", "weeks"]} />}
+              </div>
+            </Card>
+          )}
 
           {chart && (
             <Card>
