@@ -38,9 +38,13 @@
  *    the app's header row is RENAMED to "My Drive" on first use, so every row
  *    moves with it. A "Notes" tab with other columns is never touched, and if
  *    both tabs exist nothing is merged or deleted ("My Drive" is used).
+ *
+ * v6 (exam tracker):
+ *  - New known tab "Exams", created with its header row on the first save.
+ *    No existing tab is touched.
  */
 
-var SCRIPT_VERSION = 5;
+var SCRIPT_VERSION = 6;
 
 /** Tabs the script may create on first write, with their header rows. */
 var KNOWN_TABS = {
@@ -48,7 +52,11 @@ var KNOWN_TABS = {
   "Study Log": ["Id", "Date", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Minutes", "Description", "Created At", "Session Id"],
   "Study Sessions": ["Id", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Status", "Segments", "Note", "Updated At"],
   "Settings": ["Id", "Value"],
-  "My Drive": ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"]
+  "My Drive": ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"],
+  "Exams": ["Id", "Title", "Organization", "Type", "Priority", "Grade", "Salary Monthly", "Salary Gross",
+    "Total Seats", "Seats Confirmed", "Circular Date", "Website", "Links", "Apply Deadline", "Applied",
+    "Exam Date", "Exam Time", "Exam Date Estimated", "Centre Name", "Centre Map", "Centre Notes",
+    "Credentials", "Description", "Hide On Dashboard", "Created At", "Updated At"]
 };
 
 /** Earlier names of known tabs, renamed in place on first use (data moves with the tab). */

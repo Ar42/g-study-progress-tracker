@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, Code2, FolderClosed, LayoutDashboard, LogOut, NotebookPen, PieChart, Timer, X } from "lucide-react";
+import { BarChart3, ClipboardList, Code2, FolderClosed, LayoutDashboard, LogOut, NotebookPen, PieChart, Timer, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 import { IconButton } from "../components/ui";
@@ -19,6 +19,7 @@ const SECTIONS: readonly { title?: string; items: readonly NavItem[] }[] = [
     items: [
       { to: "/", label: "Dashboard", icon: <LayoutDashboard />, end: true },
       { to: "/log", label: "Study log", icon: <NotebookPen /> },
+      { to: "/exams", label: "Exams", icon: <ClipboardList /> },
       { to: "/drive", label: "My Drive", icon: <FolderClosed /> },
       { to: "/it", label: "IT topics", icon: <Code2 /> },
     ],
@@ -113,7 +114,7 @@ export function Sidebar({ open, onClose, onLogout, subjects }: SidebarProps) {
                         boxShadow: "0 0 0 2px var(--c-surface-3)",
                       }}
                     />
-                    <span className="min-w-0 flex-1 truncate">{s.row.name}</span>
+                    <span className={cn("min-w-0 flex-1 truncate", pct === 100 && s.stats.total > 0 && "text-success")}>{s.row.name}</span>
                     <span className="font-numbers text-[11px] text-fg-subtle">{pct}%</span>
                   </NavLink>
                 );

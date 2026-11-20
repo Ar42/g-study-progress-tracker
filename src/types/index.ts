@@ -120,3 +120,45 @@ export interface NoteItem {
   readonly createdAt: string;
   readonly updatedAt: string;
 }
+
+/* ------------------------------------------------------------ Exams */
+
+export type ExamType = "IT" | "GENERAL";
+export type ExamPriority = "HIGH" | "MEDIUM" | "LOW";
+
+export interface ExamLink {
+  readonly title: string;
+  readonly url: string;
+}
+
+/** One row of the "Exams" tab. Dates are ISO yyyy-mm-dd ("" when unknown). */
+export interface Exam {
+  readonly id: string;
+  readonly title: string;
+  readonly organization: string;
+  readonly type: ExamType;
+  readonly priority: ExamPriority;
+  readonly grade: string;
+  readonly salaryMonthly: string;
+  readonly salaryGross: string;
+  readonly totalSeats: string;
+  readonly seatsConfirmed: boolean;
+  readonly circularDate: string;
+  readonly website: string;
+  readonly links: readonly ExamLink[];
+  readonly applyDeadline: string;
+  readonly applied: boolean;
+  readonly examDate: string;
+  /** "HH:mm" (24h) or "". */
+  readonly examTime: string;
+  readonly examDateEstimated: boolean;
+  readonly centreName: string;
+  readonly centreMap: string;
+  readonly centreNotes: string;
+  /** Encrypted on this device before saving (see lib/secretBox). */
+  readonly credentials: string;
+  readonly description: string;
+  readonly hideOnDashboard: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}

@@ -7,7 +7,7 @@ import { cn } from "../lib/cn";
 export function MobileNav({ onOpenMenu }: { readonly onOpenMenu: () => void }) {
   const { pathname } = useLocation();
   // Pages without their own tab are reached through the menu, so it shows as active there.
-  const inMenuOnly = ["/subject/", "/notes", "/drive"].some((p) => pathname.startsWith(p));
+  const inMenuOnly = ["/subject/", "/notes", "/drive", "/exams"].some((p) => pathname.startsWith(p));
 
   const tab = (to: string, label: string, icon: ReactNode, opts: { end?: boolean; prefix?: string } = {}) => (
     <NavLink

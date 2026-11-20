@@ -22,4 +22,4 @@ export { Spinner } from "./Spinner";
 export { ListSkeleton, PageSkeleton, Skeleton, StatCardsSkeleton } from "./Skeleton";
 export { ErrorState } from "./ErrorState";
 export { StatCard } from "./StatCard";
-export { TONE_CLASS, TONE_FILL, TONE_TEXT, type Tone } from "./styles";
+export { TONE_CLASS, TONE_DOT, TONE_FILL, TONE_TEXT, type Tone } from "./styles";

@@ -1,11 +1,12 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { NOTES_SCRIPT_VERSION, REQUIRED_SCRIPT_VERSION, SHEET_NAME, TIMER_SCRIPT_VERSION, WRITE_SETTLE_MS } from "../config/constants";
-import type { LinkItem, LogEntry, NoteItem, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
+import { EXAMS_SCRIPT_VERSION, NOTES_SCRIPT_VERSION, REQUIRED_SCRIPT_VERSION, SHEET_NAME, TIMER_SCRIPT_VERSION, WRITE_SETTLE_MS } from "../config/constants";
+import type { Exam, LinkItem, LogEntry, NoteItem, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
 import { readTable, writeRow } from "./sheetClient";
 import { rowsFromTable, toPayload } from "./rowMapper";
 import { logEntriesFromTable, toLogPayload } from "./logMapper";
 import { sessionsFromTable, toSessionPayload } from "./sessionMapper";
 import { notesFromTable, toNotePayload } from "./notesMapper";
+import { examsFromTable, toExamPayload } from "./examsMapper";
 import { settingsFromTable, type SettingKey } from "./settingsMapper";
 import { useSyncStatus } from "./syncStatus";
 
@@ -46,6 +47,20 @@ export interface NotesData {
   items: NoteItem[];
   missing: boolean;
 }
+export interface ExamsData {
+  exams: Exam[];
+  missing: boolean;
+}
+let selectCachedExams: (state: unknown) => ExamsData | undefined = () => undefined;
+
+/** The exam tracker needs Code.gs v6 (the "Exams" tab). */
+function assertExamsWritable(): void {
+  const v = useSyncStatus.getState().scriptVersion ?? 0;
+  if (v < EXAMS_SCRIPT_VERSION) {
+    throw new Error("Update Code.gs in Apps Script to use the exam tracker, then try again.");
+  }
+}
+
 let selectCachedNotes: (state: unknown) => NotesData | undefined = () => undefined;
 
 /** My Drive needs Code.gs v5 (the "My Drive" tab). */
@@ -499,8 +514,76 @@ export const studyApi = createApi({
         queryFulfilled.catch(patch.undo);
       },
     }),
+
+    /* ------------------------------------------------------------ Exams */
+
+    getExams: builder.query<ExamsData, void>({
+      queryFn: async (_arg, api) => {
+        const startedAt = Date.now();
+        try {
+          const table = await readTable("EXAMS");
+          const data: ExamsData = table.missing ? { exams: [], missing: true } : { exams: examsFromTable(table.rows), missing: false };
+          if (readIsStale(startedAt)) {
+            const current = selectCachedExams(api.getState());
+            if (current) return { data: current };
+          }
+          return { data };
+        } catch (e) {
+          return { error: toError(e) };
+        }
+      },
+    }),
+
+    saveExam: builder.mutation<null, { exam: Exam; isNew: boolean }>({
+      queryFn: async ({ exam, isNew }) => {
+        try {
+          assertExamsWritable();
+          await writeRow(isNew ? "CREATE" : "UPDATE", "EXAMS", toExamPayload(exam));
+          return { data: null };
+        } catch (e) {
+          if (isNew && alreadyExists(e)) return { data: null };
+          return { error: toError(e) };
+        }
+      },
+      onQueryStarted: async ({ exam }, { dispatch, queryFulfilled }) => {
+        const patch = dispatch(
+          studyApi.util.updateQueryData("getExams", undefined, (draft) => {
+            const i = draft.exams.findIndex((x) => x.id === exam.id);
+            const copy = { ...exam, links: [...exam.links] };
+            if (i === -1) draft.exams.push(copy);
+            else draft.exams[i] = copy;
+            draft.missing = false;
+          }),
+        );
+        queryFulfilled.catch(patch.undo);
+      },
+    }),
+
+    deleteExam: builder.mutation<null, string>({
+      queryFn: async (id) => {
+        try {
+          assertExamsWritable();
+          await writeRow("DELETE", "EXAMS", { id });
+          return { data: null };
+        } catch (e) {
+          if (e instanceof Error && /not found/i.test(e.message)) return { data: null };
+          return { error: toError(e) };
+        }
+      },
+      onQueryStarted: async (id, { dispatch, queryFulfilled }) => {
+        const patch = dispatch(
+          studyApi.util.updateQueryData("getExams", undefined, (draft) => {
+            draft.exams = draft.exams.filter((x) => x.id !== id);
+          }),
+        );
+        queryFulfilled.catch(patch.undo);
+      },
+    }),
   }),
 });
+
+selectCachedExams = (state) =>
+  studyApi.endpoints.getExams.select()(state as Parameters<ReturnType<typeof studyApi.endpoints.getExams.select>>[0]).data;
 
 selectCachedNotes = (state) =>
   studyApi.endpoints.getNotes.select()(state as Parameters<ReturnType<typeof studyApi.endpoints.getNotes.select>>[0]).data;
@@ -534,4 +617,7 @@ export const {
   useGetNotesQuery,
   useSaveNoteMutation,
   useDeleteNotesMutation,
+  useGetExamsQuery,
+  useSaveExamMutation,
+  useDeleteExamMutation,
 } = studyApi;

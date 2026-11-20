@@ -31,6 +31,7 @@ export const env = {
   sessionsSheetCsvUrl: deriveTabCsvUrl("Study Sessions"),
   settingsSheetCsvUrl: deriveTabCsvUrl("Settings"),
   notesSheetCsvUrl: deriveTabCsvUrl("My Drive"),
+  examsSheetCsvUrl: deriveTabCsvUrl("Exams"),
   adminUrl: (import.meta.env.VITE_ADMIN_URL as string | undefined) || DEFAULT_ADMIN_URL,
   authUsername: (import.meta.env.VITE_AUTH_USERNAME as string | undefined) || "admin",
   authPassword: (import.meta.env.VITE_AUTH_PASSWORD as string | undefined) || "password123",

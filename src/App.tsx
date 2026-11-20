@@ -11,6 +11,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { StudyLogPage } from "./pages/StudyLogPage";
 import { StudyTimeReportPage } from "./pages/StudyTimeReportPage";
 import { NotesPage, NotesRedirect } from "./pages/NotesPage";
+import { ExamsPage } from "./pages/ExamsPage";
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="it" element={<ITPage />} />
             <Route path="log" element={<StudyLogPage />} />
             <Route path="drive" element={<NotesPage />} />
+            <Route path="exams" element={<ExamsPage />} />
             {/* Old address — keeps bookmarks working. */}
             <Route path="notes" element={<NotesRedirect />} />
             <Route path="reports" element={<Navigate to="/reports/bcs" replace />} />

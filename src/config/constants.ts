@@ -1,7 +1,7 @@
 import type { StudyDomain } from "../types";
 
 /** Every sheet tab the app talks to. */
-export type SheetKey = StudyDomain | "LOG" | "SESSIONS" | "SETTINGS" | "NOTES";
+export type SheetKey = StudyDomain | "LOG" | "SESSIONS" | "SETTINGS" | "NOTES" | "EXAMS";
 
 /** Google Sheet tab that backs each key. */
 export const SHEET_NAME: Record<SheetKey, string> = {
@@ -11,6 +11,7 @@ export const SHEET_NAME: Record<SheetKey, string> = {
   SESSIONS: "Study Sessions",
   SETTINGS: "Settings",
   NOTES: "My Drive",
+  EXAMS: "Exams",
 };
 
 /**
@@ -24,6 +25,9 @@ export const TIMER_SCRIPT_VERSION = 3;
 
 /** Code.gs v5: the "My Drive" tab (folders + link files; renamed from "Notes"). */
 export const NOTES_SCRIPT_VERSION = 5;
+
+/** Code.gs v6: the "Exams" tab (exam tracker). */
+export const EXAMS_SCRIPT_VERSION = 6;
 
 /** Default: ask to confirm sessions longer than this when finishing (minutes). */
 export const DEFAULT_CONFIRM_OVER_MINUTES = 240;

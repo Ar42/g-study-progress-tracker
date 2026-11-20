@@ -76,6 +76,7 @@ const CSV_URL: Record<SheetKey, () => string> = {
   SESSIONS: () => env.sessionsSheetCsvUrl,
   SETTINGS: () => env.settingsSheetCsvUrl,
   NOTES: () => env.notesSheetCsvUrl,
+  EXAMS: () => env.examsSheetCsvUrl,
 };
 
 async function readViaCsv(key: SheetKey): Promise<SheetTable> {
