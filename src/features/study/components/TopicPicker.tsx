@@ -1,17 +1,47 @@
 import { useMemo } from "react";
-import { Field, SegmentedControl, Select } from "../../../components/ui";
-import { STATUS_META, type DisplayStatus } from "../../../enums/progress";
+import { Field, SegmentedControl, Select, type SelectOption } from "../../../components/ui";
+import { type DisplayStatus } from "../../../enums/progress";
 import type { StudyDomain, TreeNode } from "../../../types";
 import { useSubjects, useTopics } from "../hooks/useStudyData";
 import { useTopicTarget, type TopicChoice, type TopicErrors } from "../hooks/useTopicChoice";
 
-const statusSuffix = (s: DisplayStatus) => (s === "NOT_STARTED" ? "" : `  ·  ${STATUS_META[s].label.toLowerCase()}`);
+/** Pending first (overdue, in progress), then not started, then completed. */
+const GROUPS: { label: string; statuses: DisplayStatus[]; toneClass: string }[] = [
+  { label: "Pending", statuses: ["OVERDUE", "IN_PROGRESS"], toneClass: "text-info" },
+  { label: "Not started", statuses: ["NOT_STARTED"], toneClass: "text-fg" },
+  { label: "Completed", statuses: ["COMPLETED"], toneClass: "text-success" },
+];
+const TONE: Record<DisplayStatus, string> = {
+  OVERDUE: "text-danger",
+  IN_PROGRESS: "text-info",
+  NOT_STARTED: "text-fg",
+  COMPLETED: "text-success",
+};
 
-/** Flattened chapter options for one subject, indented by depth. */
-function chapterOptions(nodes: readonly TreeNode[], depth = 0): { value: string; label: string }[] {
+interface Item {
+  readonly id: string;
+  readonly label: string;
+  readonly status: DisplayStatus;
+}
+
+function groupedOptions(items: readonly Item[]): SelectOption[] {
+  return GROUPS.flatMap((g) =>
+    items
+      .filter((i) => g.statuses.includes(i.status))
+      .map((i) => ({
+        value: i.id,
+        label: i.status === "OVERDUE" ? `${i.label}  ·  overdue` : i.label,
+        group: g.label,
+        toneClass: TONE[i.status],
+      })),
+  );
+}
+
+/** Every chapter of a subject, labelled with its parent path, keeping tree order inside each group. */
+function chapterItems(nodes: readonly TreeNode[], path: string[] = []): Item[] {
   return nodes.flatMap((n) => [
-    { value: n.row.id, label: `${" ".repeat(depth)}${n.row.name}${n.isLeaf ? statusSuffix(n.status) : ""}` },
-    ...chapterOptions(n.children, depth + 1),
+    { id: n.row.id, label: [...path, n.row.name].join(" › "), status: n.status },
+    ...chapterItems(n.children, [...path, n.row.name]),
   ]);
 }
 
@@ -32,8 +62,8 @@ export function TopicPicker({ value, onChange, errors = {}, markActive, onMarkAc
   const target = useTopicTarget(value);
 
   const subject = subjects.find((s) => s.row.id === value.subjectId);
-  const bcsOptions = useMemo(() => (subject ? chapterOptions(subject.children) : []), [subject]);
-  const itOptions = useMemo(() => topics.map((t) => ({ value: t.row.id, label: `${t.row.name}${statusSuffix(t.status)}` })), [topics]);
+  const bcsOptions = useMemo(() => (subject ? groupedOptions(chapterItems(subject.children)) : []), [subject]);
+  const itOptions = useMemo(() => groupedOptions(topics.map((t) => ({ id: t.row.id, label: t.row.name, status: t.status }))), [topics]);
 
   return (
     <div className="space-y-4">

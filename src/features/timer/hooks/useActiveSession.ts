@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { TIMER_SCRIPT_VERSION } from "../../../config/constants";
 import { formatMinutes } from "../../../lib/duration";
 import { generateRowId } from "../../../lib/id";
-import { closeSegments, isRunning, splitByLocalDay } from "../../../lib/sessionTime";
+import { adjustSegments, closeSegments, elapsedMs, isRunning, splitByLocalDay } from "../../../lib/sessionTime";
 import { useSyncStatus } from "../../../services/syncStatus";
 import {
   useCreateLogMutation,
@@ -94,6 +94,23 @@ export function useActiveSession() {
     );
   }, [session, save]);
 
+  /** Adds or removes minutes from the live session (forgot to pause / resume). */
+  const adjust = useCallback(
+    (deltaMinutes: number) => {
+      if (!session) return Promise.resolve(false);
+      const now = Date.now();
+      const current = elapsedMs(session.segments, now) / 60000;
+      const delta = Math.max(deltaMinutes, -current);
+      if (delta === 0) return Promise.resolve(false);
+      return save(
+        { ...session, segments: adjustSegments(session.segments, delta, now), updatedAt: new Date(now).toISOString() },
+        false,
+        "Couldn't adjust the timer",
+      );
+    },
+    [session, save],
+  );
+
   const updateDetails = useCallback(
     (changes: Pick<StudySession, "category" | "subjectId" | "subjectName" | "topicId" | "topicName" | "note">) => {
       if (!session) return Promise.resolve(false);
@@ -156,7 +173,7 @@ export function useActiveSession() {
     [session, createLog, deleteSession],
   );
 
-  return { session, isLoading, writable, running, start, pause, resume, updateDetails, discard, finish };
+  return { session, isLoading, writable, running, start, pause, resume, adjust, updateDetails, discard, finish };
 }
 
 /** Opens the start dialog — or explains why it can't. */

@@ -78,3 +78,32 @@ export function truncateToMinutes(segments: readonly Segment[], minutes: number,
   }
   return out;
 }
+
+/**
+ * Adds (`deltaMinutes` > 0) or removes (< 0) studied time — for when you forgot
+ * to resume or pause. Extra time is added before the first segment; removed
+ * time comes off the earliest segments. Never goes below zero.
+ */
+export function adjustSegments(segments: readonly Segment[], deltaMinutes: number, now: number = Date.now()): Segment[] {
+  if (segments.length === 0 || deltaMinutes === 0) return [...segments];
+  const delta = deltaMinutes * 60000;
+  if (delta > 0) {
+    const [first, ...rest] = segments;
+    return [{ ...first, start: new Date(ms(first.start) - delta).toISOString() }, ...rest];
+  }
+  let budget = -delta;
+  const out: Segment[] = [];
+  segments.forEach((seg, i) => {
+    const end = seg.end ? ms(seg.end) : now;
+    const len = Math.max(0, end - ms(seg.start));
+    const isLast = i === segments.length - 1;
+    if (budget >= len && !isLast) {
+      budget -= len;
+      return;
+    }
+    const cut = Math.min(budget, len);
+    budget -= cut;
+    out.push({ ...seg, start: new Date(ms(seg.start) + cut).toISOString() });
+  });
+  return out;
+}

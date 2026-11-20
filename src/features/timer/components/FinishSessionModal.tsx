@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import { AlertTriangle, CalendarDays, Check } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, Clock } from "lucide-react";
 import { Badge, Button, DurationInput, Field, MarkdownEditor, Modal } from "../../../components/ui";
 import { cn } from "../../../lib/cn";
 import { formatMinutes, parseDuration } from "../../../lib/duration";
-import { closeSegments, elapsedMs, splitByLocalDay, truncateToMinutes } from "../../../lib/sessionTime";
+import { adjustSegments, closeSegments, elapsedMs, splitByLocalDay, truncateToMinutes } from "../../../lib/sessionTime";
 import { useSettings } from "../../targets/hooks/useSettings";
 import { useActiveSession } from "../hooks/useActiveSession";
 
@@ -23,7 +23,11 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
   const { settings } = useSettings();
   const [frozenAt] = useState(() => Date.now());
   const [description, setDescription] = useState(session?.note ?? "");
-  const [longChoice, setLongChoice] = useState<LongChoice>(null);
+  const [longChoice, setLongChoice] = useState<LongChoice>(() => {
+    if (!session) return null;
+    const total = elapsedMs(closeSegments(session.segments, frozenAt), frozenAt) / 60000;
+    return total > settings.confirmSessionOverMinutes ? null : "keep";
+  });
   const [correction, setCorrection] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -41,17 +45,20 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
         ? "Enter how long you actually studied"
         : !parsedCorrection.ok
           ? parsedCorrection.error
-          : parsedCorrection.minutes > totalMin
-            ? `Can't be more than the timed ${formatMinutes(totalMin)}`
+          : parsedCorrection.minutes < 1
+            ? "Must be at least a minute"
             : undefined
       : undefined;
 
   const finalSegments = useMemo(() => {
-    if (isLong && longChoice === "correct" && parsedCorrection?.ok && !correctionError) {
-      return truncateToMinutes(closed, parsedCorrection.minutes, frozenAt);
+    if (longChoice === "correct" && parsedCorrection?.ok && !correctionError) {
+      const target = parsedCorrection.minutes;
+      return target <= totalMin
+        ? truncateToMinutes(closed, target, frozenAt)
+        : adjustSegments(closed, target - totalMin, frozenAt);
     }
     return closed;
-  }, [isLong, longChoice, parsedCorrection, correctionError, closed, frozenAt]);
+  }, [longChoice, parsedCorrection, correctionError, closed, frozenAt, totalMin]);
   const shares = splitByLocalDay(finalSegments, frozenAt);
   const finalTotal = shares.reduce((n, s) => n + s.minutes, 0);
 
@@ -62,7 +69,7 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
 
   const save = async () => {
     setSubmitted(true);
-    if (!description.trim() || (isLong && (!longChoice || correctionError)) || tooShort || shares.length === 0) return;
+    if (!description.trim() || !longChoice || (longChoice === "correct" && correctionError) || tooShort || shares.length === 0) return;
     setBusy(true);
     const ok = await finish(finalSegments, description);
     setBusy(false);
@@ -146,19 +153,32 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
             </details>
           </section>
 
-          {/* Forgot to pause? */}
-          {isLong && (
+          {/* Confirm or correct the time — always available; required for long sessions. */}
+          {(
             <section
               className={cn(
                 "space-y-3 rounded-xl border p-4",
-                longError ? "border-danger/50 bg-danger-soft" : "border-warning/30 bg-warning-soft",
+                longError ? "border-danger/50 bg-danger-soft" : isLong ? "border-warning/30 bg-warning-soft" : "border-border bg-surface-2/50",
               )}
             >
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+                {isLong ? (
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
+                ) : (
+                  <Clock className="mt-0.5 size-4 shrink-0 text-fg-subtle" />
+                )}
                 <div className="text-sm">
-                  <p className="font-semibold text-fg">That's {formatMinutes(totalMin)} — did you forget to pause?</p>
-                  <p className="text-fg-muted">Sessions over {formatMinutes(threshold)} need a quick check before they're logged.</p>
+                  {isLong ? (
+                    <>
+                      <p className="font-semibold text-fg">That's {formatMinutes(totalMin)} — did you forget to pause?</p>
+                      <p className="text-fg-muted">Sessions over {formatMinutes(threshold)} need a quick check before they're logged.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-fg">Timed {formatMinutes(totalMin)}</p>
+                      <p className="text-fg-muted">Forgot to pause or resume? Correct it here.</p>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="space-y-2 pl-6">
@@ -170,7 +190,7 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
                     onChange={() => setLongChoice("keep")}
                     className="accent-(--c-primary)"
                   />
-                  Yes, I really studied {formatMinutes(totalMin)}
+                  {isLong ? `Yes, I really studied ${formatMinutes(totalMin)}` : `Keep ${formatMinutes(totalMin)}`}
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-fg">
                   <input
@@ -183,7 +203,7 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
                   No — I actually studied:
                 </label>
                 {longChoice === "correct" && (
-                  <Field label="Actual time" htmlFor="fin-correct" error={submitted ? correctionError : undefined} hint="The extra time at the end is dropped.">
+                  <Field label="Actual time" htmlFor="fin-correct" error={submitted ? correctionError : undefined} hint="Less than timed drops time from the end; more adds it before the start.">
                     <DurationInput
                       id="fin-correct"
                       value={correction}

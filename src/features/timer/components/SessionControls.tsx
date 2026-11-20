@@ -1,4 +1,5 @@
-import { Check, Pause, Pencil, Play, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Check, Pause, Pencil, Play, SlidersHorizontal, Trash2 } from "lucide-react";
 import { Button, IconButton } from "../../../components/ui";
 import { cn } from "../../../lib/cn";
 import { formatClock, formatMinutes } from "../../../lib/duration";
@@ -10,7 +11,8 @@ import { useTimerUi } from "../timerUi";
 
 /** Live clock + pause/resume/finish for the active session. `size` picks dock vs card layout. */
 export function SessionControls({ size = "compact" }: { readonly size?: "compact" | "large" }) {
-  const { session, running, pause, resume } = useActiveSession();
+  const { session, running, pause, resume, adjust } = useActiveSession();
+  const [adjusting, setAdjusting] = useState(false);
   const { settings } = useSettings();
   const open = useTimerUi((s) => s.open);
   const now = useNow(running);
@@ -41,6 +43,13 @@ export function SessionControls({ size = "compact" }: { readonly size?: "compact
           <p className="truncate text-xs text-fg-subtle">{session.category === "IT" ? "IT" : session.subjectName}</p>
         </div>
         <div className="flex shrink-0 items-center">
+          <IconButton
+            label="Adjust time"
+            icon={<SlidersHorizontal />}
+            size="sm"
+            className={adjusting ? "bg-surface-2 text-fg" : undefined}
+            onClick={() => setAdjusting((v) => !v)}
+          />
           <IconButton label="Edit session" icon={<Pencil />} size="sm" onClick={() => open({ kind: "edit" })} />
           <IconButton label="Discard session" icon={<Trash2 />} size="sm" tone="danger" onClick={() => open({ kind: "busy" })} />
         </div>
@@ -68,6 +77,26 @@ export function SessionControls({ size = "compact" }: { readonly size?: "compact
           </Button>
         </div>
       </div>
+
+      {adjusting && (
+        <div className="space-y-2 rounded-lg border border-border bg-surface-2/50 p-2.5">
+          <p className="text-xs text-fg-muted">Forgot to pause or resume? Correct the clock:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {[-30, -15, -5, 5, 15, 30].map((d) => (
+              <Button
+                key={d}
+                size="sm"
+                variant={d < 0 ? "secondary" : "soft"}
+                className={cn("font-numbers", d < 0 && "text-danger")}
+                disabled={d < 0 && elapsed / 60000 < 1}
+                onClick={() => void adjust(d)}
+              >
+                {d > 0 ? `+${d}` : `−${-d}`}m
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {overLimit && (
         <p className="text-xs text-warning">
