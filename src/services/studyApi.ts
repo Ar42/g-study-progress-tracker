@@ -1,10 +1,11 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
-import { REQUIRED_SCRIPT_VERSION, SHEET_NAME, TIMER_SCRIPT_VERSION, WRITE_SETTLE_MS } from "../config/constants";
-import type { LinkItem, LogEntry, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
+import { NOTES_SCRIPT_VERSION, REQUIRED_SCRIPT_VERSION, SHEET_NAME, TIMER_SCRIPT_VERSION, WRITE_SETTLE_MS } from "../config/constants";
+import type { LinkItem, LogEntry, NoteItem, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
 import { readTable, writeRow } from "./sheetClient";
 import { rowsFromTable, toPayload } from "./rowMapper";
 import { logEntriesFromTable, toLogPayload } from "./logMapper";
 import { sessionsFromTable, toSessionPayload } from "./sessionMapper";
+import { notesFromTable, toNotePayload } from "./notesMapper";
 import { settingsFromTable, type SettingKey } from "./settingsMapper";
 import { useSyncStatus } from "./syncStatus";
 
@@ -41,6 +42,20 @@ export interface LogData {
 /** Assigned below once the API exists (keeps TypeScript inference non-circular). */
 let selectCachedRows: (state: unknown, domain: StudyDomain) => StudyRow[] | undefined = () => undefined;
 let selectCachedLog: (state: unknown) => LogData | undefined = () => undefined;
+export interface NotesData {
+  items: NoteItem[];
+  missing: boolean;
+}
+let selectCachedNotes: (state: unknown) => NotesData | undefined = () => undefined;
+
+/** Notes need Code.gs v4 (the "Notes" tab). */
+function assertNotesWritable(): void {
+  const v = useSyncStatus.getState().scriptVersion ?? 0;
+  if (v < NOTES_SCRIPT_VERSION) {
+    throw new Error("Update Code.gs in Apps Script to use Notes, then try again.");
+  }
+}
+
 let selectCachedSessions: (state: unknown) => SessionsData | undefined = () => undefined;
 let selectCachedSettings: (state: unknown) => SettingsData | undefined = () => undefined;
 
@@ -413,8 +428,82 @@ export const studyApi = createApi({
         }
       },
     }),
+
+    /* ------------------------------------------------------------ Notes */
+
+    getNotes: builder.query<NotesData, void>({
+      queryFn: async (_arg, api) => {
+        const startedAt = Date.now();
+        try {
+          const table = await readTable("NOTES");
+          const data: NotesData = table.missing ? { items: [], missing: true } : { items: notesFromTable(table.rows), missing: false };
+          if (readIsStale(startedAt)) {
+            const current = selectCachedNotes(api.getState());
+            if (current) return { data: current };
+          }
+          return { data };
+        } catch (e) {
+          return { error: toError(e) };
+        }
+      },
+    }),
+
+    saveNote: builder.mutation<null, { item: NoteItem; isNew: boolean }>({
+      queryFn: async ({ item, isNew }) => {
+        try {
+          assertNotesWritable();
+          await writeRow(isNew ? "CREATE" : "UPDATE", "NOTES", toNotePayload(item));
+          return { data: null };
+        } catch (e) {
+          if (isNew && alreadyExists(e)) return { data: null };
+          return { error: toError(e) };
+        }
+      },
+      onQueryStarted: async ({ item }, { dispatch, queryFulfilled }) => {
+        const patch = dispatch(
+          studyApi.util.updateQueryData("getNotes", undefined, (draft) => {
+            const i = draft.items.findIndex((x) => x.id === item.id);
+            if (i === -1) draft.items.push(item);
+            else draft.items[i] = item;
+            draft.missing = false;
+          }),
+        );
+        queryFulfilled.catch(patch.undo);
+      },
+    }),
+
+    /** Deletes several notes (a folder and everything inside it), one row at a time. */
+    deleteNotes: builder.mutation<null, string[]>({
+      queryFn: async (ids) => {
+        try {
+          assertNotesWritable();
+          for (const id of ids) {
+            try {
+              await writeRow("DELETE", "NOTES", { id });
+            } catch (e) {
+              if (!(e instanceof Error && /not found/i.test(e.message))) throw e;
+            }
+          }
+          return { data: null };
+        } catch (e) {
+          return { error: toError(e) };
+        }
+      },
+      onQueryStarted: async (ids, { dispatch, queryFulfilled }) => {
+        const gone = new Set(ids);
+        const patch = dispatch(
+          studyApi.util.updateQueryData("getNotes", undefined, (draft) => {
+            draft.items = draft.items.filter((x) => !gone.has(x.id));
+          }),
+        );
+        queryFulfilled.catch(patch.undo);
+      },
+    }),
   }),
 });
+
+selectCachedNotes = (state) =>
+  studyApi.endpoints.getNotes.select()(state as Parameters<ReturnType<typeof studyApi.endpoints.getNotes.select>>[0]).data;
 
 selectCachedSessions = (state) =>
   studyApi.endpoints.getSessions.select()(state as Parameters<ReturnType<typeof studyApi.endpoints.getSessions.select>>[0]).data;
@@ -442,4 +531,7 @@ export const {
   useDeleteSessionMutation,
   useGetSettingsQuery,
   useSaveSettingsMutation,
+  useGetNotesQuery,
+  useSaveNoteMutation,
+  useDeleteNotesMutation,
 } = studyApi;

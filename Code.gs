@@ -29,16 +29,20 @@
  *  - ensureColumns(): before a write to a known tab, any missing header from
  *    KNOWN_TABS is APPENDED after the last column. Existing columns are never
  *    moved, renamed or removed.
+ *
+ * v4 (notes):
+ *  - New known tab "Notes": folders and link files, nested via Parent Id.
  */
 
-var SCRIPT_VERSION = 3;
+var SCRIPT_VERSION = 4;
 
 /** Tabs the script may create on first write, with their header rows. */
 var KNOWN_TABS = {
   "IT": ["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links"],
   "Study Log": ["Id", "Date", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Minutes", "Description", "Created At", "Session Id"],
   "Study Sessions": ["Id", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Status", "Segments", "Note", "Updated At"],
-  "Settings": ["Id", "Value"]
+  "Settings": ["Id", "Value"],
+  "Notes": ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"]
 };
 
 /** Request plumbing that must never be written into a cell. */

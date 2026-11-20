@@ -105,3 +105,16 @@ export interface StudySettings {
   readonly weeklyTargetMinutes: number;
   readonly confirmSessionOverMinutes: number;
 }
+
+/** A folder or a link file in Notes (a row of the "Notes" tab). */
+export interface NoteItem {
+  readonly id: string;
+  /** "" = top level. */
+  readonly parentId: string;
+  readonly type: "FOLDER" | "FILE";
+  readonly name: string;
+  /** Files only. */
+  readonly link: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
