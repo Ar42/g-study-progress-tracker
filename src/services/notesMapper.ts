@@ -1,7 +1,7 @@
 import { normalizeHeader } from "../lib/csv";
 import type { NoteItem } from "../types";
 
-/** "Notes" tab. Keys in toNotePayload normalise to these titles. */
+/** "My Drive" tab. Keys in toNotePayload normalise to these titles. */
 export const NOTE_HEADERS = ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"] as const;
 
 export function notesFromTable(table: readonly (readonly string[])[]): NoteItem[] {
@@ -18,7 +18,7 @@ export function notesFromTable(table: readonly (readonly string[])[]): NoteItem[
     updatedAt: col("Updated At"),
   };
   if (idx.id === -1 || idx.name === -1 || idx.type === -1) {
-    throw new Error("The “Notes” tab is missing or its header row doesn't match.");
+    throw new Error("The “My Drive” tab is missing or its header row doesn't match.");
   }
   const out: NoteItem[] = [];
   for (const cells of table.slice(1)) {

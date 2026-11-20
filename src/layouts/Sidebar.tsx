@@ -19,7 +19,7 @@ const SECTIONS: readonly { title?: string; items: readonly NavItem[] }[] = [
     items: [
       { to: "/", label: "Dashboard", icon: <LayoutDashboard />, end: true },
       { to: "/log", label: "Study log", icon: <NotebookPen /> },
-      { to: "/notes", label: "Notes", icon: <FolderClosed /> },
+      { to: "/drive", label: "My Drive", icon: <FolderClosed /> },
       { to: "/it", label: "IT topics", icon: <Code2 /> },
     ],
   },

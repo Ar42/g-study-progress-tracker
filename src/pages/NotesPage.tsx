@@ -1,5 +1,5 @@
 import { useMemo, useState, type DragEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { AlertTriangle, ChevronRight, FolderInput, FolderPlus, Home, Link2, Pencil, Search, SearchX, Trash2 } from "lucide-react";
 import { Button, Card, ConfirmDialog, EmptyState, IconButton, Input, PageHeader, Spinner } from "../components/ui";
 import { cn } from "../lib/cn";
@@ -29,7 +29,7 @@ export function NotesPage() {
   const folder = items.find((i) => i.id === requested && i.type === "FOLDER") ?? null;
   const folderId = folder?.id ?? "";
   const crumbs = useMemo(() => (folder ? pathTo(items, folder.id) : []), [items, folder]);
-  const folderName = folder?.name ?? "Notes";
+  const folderName = folder?.name ?? "My Drive";
   const open = (id: string) => setParams(id ? { folder: id } : {});
 
   const q = query.trim().toLocaleLowerCase();
@@ -40,7 +40,7 @@ export function NotesPage() {
       .sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === "FOLDER" ? -1 : 1));
   }, [items, folderId, q]);
   const countIn = (id: string) => items.filter((i) => i.parentId === id).length;
-  const locationOf = (i: NoteItem) => pathTo(items, i.parentId).map((p) => p.name).join(" / ") || "Notes";
+  const locationOf = (i: NoteItem) => pathTo(items, i.parentId).map((p) => p.name).join(" / ") || "My Drive";
 
   /* -------------------------------------------------------- drag & drop */
   const dragged = dragId ? items.find((i) => i.id === dragId) ?? null : null;
@@ -68,8 +68,8 @@ export function NotesPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Notes"
-        description="Folders of links to your notes, docs and resources."
+        title="My Drive"
+        description="Your folders of links — notes, docs, exam dates, resources."
         actions={
           <>
             <Button variant="secondary" icon={<FolderPlus className="size-4" />} disabled={!writable} onClick={() => setEditor({ type: "FOLDER", parentId: folderId })}>
@@ -86,7 +86,7 @@ export function NotesPage() {
         <Card className="flex items-start gap-3 border-warning/30 bg-warning-soft p-4">
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warning" />
           <p className="text-sm text-fg-muted">
-            <span className="font-semibold text-fg">Notes need the latest Code.gs.</span> Copy everything in <code className="font-mono text-xs">Code.gs</code>,
+            <span className="font-semibold text-fg">My Drive needs the latest Code.gs.</span> Copy everything in <code className="font-mono text-xs">Code.gs</code>,
             paste it over the code in Extensions → Apps Script, then Deploy → Manage deployments → edit → Version: <em>New version</em> → Deploy.
           </p>
         </Card>
@@ -111,7 +111,7 @@ export function NotesPage() {
                 overId === ROOT_DROP && "bg-primary-soft ring-2 ring-primary/40",
               )}
             >
-              <Home className="size-4" /> Notes
+              <Home className="size-4" /> My Drive
             </button>
             {!q &&
               crumbs.map((c, i) => (
@@ -133,7 +133,7 @@ export function NotesPage() {
               ))}
           </nav>
           <div className="sm:w-72">
-            <Input leading={<Search />} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search all notes…" aria-label="Search notes" />
+            <Input leading={<Search />} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search My Drive…" aria-label="Search My Drive" />
           </div>
         </div>
 
@@ -142,14 +142,14 @@ export function NotesPage() {
             <Spinner />
           </div>
         ) : error ? (
-          <EmptyState icon={<AlertTriangle />} title="Couldn't load notes" description={error} />
+          <EmptyState icon={<AlertTriangle />} title="Couldn't load My Drive" description={error} />
         ) : list.length === 0 ? (
           q ? (
             <EmptyState icon={<SearchX />} title="Nothing matches" description="Try another word." />
           ) : (
             <EmptyState
               icon={<FolderPlus />}
-              title={folder ? "This folder is empty" : "No notes yet"}
+              title={folder ? "This folder is empty" : "Nothing here yet"}
               description="Create a folder, or add a link to a Google Doc, PDF, video or any web page."
               action={
                 writable && (
@@ -264,11 +264,11 @@ export function NotesPage() {
           deleting?.type === "FOLDER" && deleteCount > 0 ? (
             <>
               <span className="font-medium text-fg">{deleting.name}</span> and the <span className="font-semibold text-fg">{deleteCount}</span>{" "}
-              {deleteCount === 1 ? "item" : "items"} inside it will be removed from the Notes tab. Tip: move anything you want to keep out first.
+              {deleteCount === 1 ? "item" : "items"} inside it will be removed from the My Drive tab. Tip: move anything you want to keep out first.
             </>
           ) : (
             <>
-              <span className="font-medium text-fg">{deleting?.name}</span> will be removed from the Notes tab. {deleting?.type === "FILE" && "The linked document itself isn't touched."}
+              <span className="font-medium text-fg">{deleting?.name}</span> will be removed from the My Drive tab. {deleting?.type === "FILE" && "The linked document itself isn't touched."}
             </>
           )
         }
@@ -284,4 +284,10 @@ export function NotesPage() {
       />
     </div>
   );
+}
+
+/** /notes → /drive (keeps the folder in the query string). */
+export function NotesRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/drive${search}`} replace />;
 }

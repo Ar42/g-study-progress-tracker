@@ -28,7 +28,7 @@ export interface MoveNoteModalProps {
 
 /** Pick the destination folder. Works on phones (no drag needed). */
 export function MoveNoteModal({ item, items, onClose, onMove }: MoveNoteModalProps) {
-  const rows = useMemo(() => [{ id: "", name: "Notes (top level)", depth: 0 }, ...folderRows(items)], [items]);
+  const rows = useMemo(() => [{ id: "", name: "My Drive (top level)", depth: 0 }, ...folderRows(items)], [items]);
   const [target, setTarget] = useState<string | null>(null);
   const chosen = rows.find((r) => r.id === target);
 

@@ -10,7 +10,7 @@ import { BcsReportPage, ItReportPage } from "./pages/ReportsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { StudyLogPage } from "./pages/StudyLogPage";
 import { StudyTimeReportPage } from "./pages/StudyTimeReportPage";
-import { NotesPage } from "./pages/NotesPage";
+import { NotesPage, NotesRedirect } from "./pages/NotesPage";
 
 export default function App() {
   const theme = useTheme((s) => s.theme);
@@ -25,7 +25,9 @@ export default function App() {
             <Route path="subject/:subjectId" element={<SubjectPage />} />
             <Route path="it" element={<ITPage />} />
             <Route path="log" element={<StudyLogPage />} />
-            <Route path="notes" element={<NotesPage />} />
+            <Route path="drive" element={<NotesPage />} />
+            {/* Old address — keeps bookmarks working. */}
+            <Route path="notes" element={<NotesRedirect />} />
             <Route path="reports" element={<Navigate to="/reports/bcs" replace />} />
             <Route path="reports/bcs" element={<BcsReportPage />} />
             <Route path="reports/it" element={<ItReportPage />} />

@@ -1,5 +1,5 @@
 /**
- * Link helpers for Notes files: what kind of link it is, and — for Google
+ * Link helpers for My Drive files: what kind of link it is, and — for Google
  * Docs / Sheets / Slides / Drive on phones — the URL that opens the Google app
  * instead of the browser.
  */

@@ -48,11 +48,11 @@ export interface NotesData {
 }
 let selectCachedNotes: (state: unknown) => NotesData | undefined = () => undefined;
 
-/** Notes need Code.gs v4 (the "Notes" tab). */
+/** My Drive needs Code.gs v5 (the "My Drive" tab). */
 function assertNotesWritable(): void {
   const v = useSyncStatus.getState().scriptVersion ?? 0;
   if (v < NOTES_SCRIPT_VERSION) {
-    throw new Error("Update Code.gs in Apps Script to use Notes, then try again.");
+    throw new Error("Update Code.gs in Apps Script to use My Drive, then try again.");
   }
 }
 

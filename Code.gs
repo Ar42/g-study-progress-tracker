@@ -31,10 +31,16 @@
  *    moved, renamed or removed.
  *
  * v4 (notes):
- *  - New known tab "Notes": folders and link files, nested via Parent Id.
+ *  - New known tab for folders and link files, nested via Parent Id.
+ *
+ * v5 (My Drive):
+ *  - That tab is now called "My Drive". A tab still named "Notes" with exactly
+ *    the app's header row is RENAMED to "My Drive" on first use, so every row
+ *    moves with it. A "Notes" tab with other columns is never touched, and if
+ *    both tabs exist nothing is merged or deleted ("My Drive" is used).
  */
 
-var SCRIPT_VERSION = 4;
+var SCRIPT_VERSION = 5;
 
 /** Tabs the script may create on first write, with their header rows. */
 var KNOWN_TABS = {
@@ -42,8 +48,31 @@ var KNOWN_TABS = {
   "Study Log": ["Id", "Date", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Minutes", "Description", "Created At", "Session Id"],
   "Study Sessions": ["Id", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Status", "Segments", "Note", "Updated At"],
   "Settings": ["Id", "Value"],
-  "Notes": ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"]
+  "My Drive": ["Id", "Parent Id", "Type", "Name", "Link", "Created At", "Updated At"]
 };
+
+/** Earlier names of known tabs, renamed in place on first use (data moves with the tab). */
+var LEGACY_TAB_NAMES = { "My Drive": "Notes" };
+
+/**
+ * If `name` doesn't exist but its legacy tab does — with exactly the expected
+ * header row — rename the legacy tab. Returns the sheet or null.
+ */
+function migrateLegacyTab(name) {
+  var legacy = LEGACY_TAB_NAMES[name];
+  if (!legacy) return null;
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (spreadsheet.getSheetByName(name)) return spreadsheet.getSheetByName(name);
+  var old = spreadsheet.getSheetByName(legacy);
+  if (!old || old.getLastColumn() < 1) return null;
+  var wanted = KNOWN_TABS[name];
+  var header = old.getRange(1, 1, 1, old.getLastColumn()).getValues()[0];
+  for (var i = 0; i < wanted.length; i++) {
+    if (normalizeKey(header[i]) !== normalizeKey(wanted[i])) return null; // not ours — leave it alone
+  }
+  old.setName(name);
+  return old;
+}
 
 /** Request plumbing that must never be written into a cell. */
 var NON_DATA_KEYS = { domain: true, sheetName: true, id1: true, id2: true };
@@ -58,7 +87,7 @@ function normalizeKey(header) {
 
 function resolveSheet(name, createIfKnown) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName(name);
+  var sheet = spreadsheet.getSheetByName(name) || migrateLegacyTab(name);
   if (!sheet && createIfKnown && KNOWN_TABS[name]) {
     var headers = KNOWN_TABS[name];
     sheet = spreadsheet.insertSheet(name);
@@ -98,6 +127,15 @@ function doGet(e) {
   try {
     var name = params.sheet || "Sheet1";
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+    if (!sheet && LEGACY_TAB_NAMES[name]) {
+      var lock = LockService.getScriptLock();
+      lock.waitLock(30000);
+      try {
+        sheet = migrateLegacyTab(name);
+      } finally {
+        lock.releaseLock();
+      }
+    }
     if (!sheet) {
       if (KNOWN_TABS[name]) return json({ status: "success", rows: [], missing: true, version: SCRIPT_VERSION });
       throw new Error("Sheet '" + name + "' not found");

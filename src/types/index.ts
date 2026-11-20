@@ -106,7 +106,7 @@ export interface StudySettings {
   readonly confirmSessionOverMinutes: number;
 }
 
-/** A folder or a link file in Notes (a row of the "Notes" tab). */
+/** A folder or a link file in My Drive (a row of the "My Drive" tab). */
 export interface NoteItem {
   readonly id: string;
   /** "" = top level. */
