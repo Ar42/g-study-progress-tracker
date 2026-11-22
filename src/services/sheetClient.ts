@@ -1,5 +1,5 @@
 import { env } from "../config/env";
-import { SHEET_NAME, type SheetKey } from "../config/constants";
+import { SHEET_NAME, SHEET_SOURCE, type SheetKey, type SheetSource } from "../config/constants";
 import { parseCsv } from "../lib/csv";
 import { useSyncStatus } from "./syncStatus";
 
@@ -13,7 +13,24 @@ import { useSyncStatus } from "./syncStatus";
  * A network hiccup is NOT treated as "unsupported": that read falls back to CSV
  * and the next read tries the script again.
  */
-let scriptReadSupported: boolean | null = null;
+const scriptReadSupported: Partial<Record<SheetSource, boolean>> = {};
+
+/** Apps Script /exec URL for each spreadsheet ("" = not configured). */
+const ADMIN_URL: Record<SheetSource, () => string> = {
+  STUDY: () => env.adminUrl,
+  SECOND: () => env.secondAdminUrl,
+};
+
+/** True when the spreadsheet behind `key` has a script URL configured. */
+export function isSheetConfigured(key: SheetKey): boolean {
+  return Boolean(ADMIN_URL[SHEET_SOURCE[key]]());
+}
+
+function adminUrlFor(key: SheetKey): string {
+  const url = ADMIN_URL[SHEET_SOURCE[key]]();
+  if (!url) throw new Error("This spreadsheet isn't connected yet — set its Apps Script URL in the environment settings.");
+  return url;
+}
 
 // Older builds remembered "unsupported" in localStorage for 6 hours, which kept
 // showing "Update your Apps Script" after a successful redeploy. Clear it.
@@ -38,34 +55,36 @@ interface ReadResponse {
 }
 
 async function readViaScript(key: SheetKey): Promise<SheetTable | null> {
-  if (scriptReadSupported === false) return null;
+  const source = SHEET_SOURCE[key];
+  if (scriptReadSupported[source] === false) return null;
+  const base = adminUrlFor(key);
   let json: ReadResponse;
   try {
-    const url = `${env.adminUrl}?action=read&sheet=${encodeURIComponent(SHEET_NAME[key])}`;
+    const url = `${base}?action=read&sheet=${encodeURIComponent(SHEET_NAME[key])}`;
     const res = await fetch(url, { cache: "no-store" });
     json = (await res.json()) as ReadResponse;
   } catch {
     // Network error or a non-JSON reply (e.g. Google's "Script function not found"
     // page for a wrong/old deployment URL): use CSV this time, retry next time.
-    useSyncStatus.getState().setScriptIssue("unreachable");
+    useSyncStatus.getState().setScriptIssue("unreachable", source);
     return null;
   }
   // v1 reports "Sheet not found" as an error; v2 reports `missing: true`.
   if (json.status === "error") {
     if (/not found/i.test(json.message ?? "")) {
-      useSyncStatus.getState().setScriptVersion(json.version ?? 1);
+      useSyncStatus.getState().setScriptVersion(json.version ?? 1, source);
       return { rows: [], missing: true };
     }
     throw new Error(json.message?.replace(/^Error:\s*/, "") || "Couldn't read the sheet.");
   }
   if (!Array.isArray(json.rows)) {
     // A genuinely old script (no read endpoint): stop asking for this page load.
-    scriptReadSupported = false;
-    useSyncStatus.getState().setScriptIssue("outdated");
+    scriptReadSupported[source] = false;
+    useSyncStatus.getState().setScriptIssue("outdated", source);
     return null;
   }
-  scriptReadSupported = true;
-  useSyncStatus.getState().setScriptVersion(json.version ?? 1);
+  scriptReadSupported[source] = true;
+  useSyncStatus.getState().setScriptVersion(json.version ?? 1, source);
   return { rows: json.rows, missing: Boolean(json.missing) };
 }
 
@@ -81,6 +100,7 @@ const CSV_URL: Record<SheetKey, () => string> = {
 
 async function readViaCsv(key: SheetKey): Promise<SheetTable> {
   const base = CSV_URL[key]();
+  if (!base) throw new Error("This spreadsheet isn't publicly readable and its script didn't answer.");
   const url = `${base}${base.includes("?") ? "&" : "?"}_ts=${Date.now()}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Google Sheets responded with ${res.status}.`);
@@ -112,7 +132,7 @@ let queue: Promise<unknown> = Promise.resolve();
 
 async function post(action: WriteAction, key: SheetKey, payload: Record<string, unknown>) {
   const sheetName = SHEET_NAME[key];
-  const res = await fetch(env.adminUrl, {
+  const res = await fetch(adminUrlFor(key), {
     method: "POST",
     // text/plain avoids a CORS preflight, which Apps Script cannot answer.
     headers: { "Content-Type": "text/plain;charset=utf-8" },

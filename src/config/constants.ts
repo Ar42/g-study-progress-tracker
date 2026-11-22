@@ -3,6 +3,23 @@ import type { StudyDomain } from "../types";
 /** Every sheet tab the app talks to. */
 export type SheetKey = StudyDomain | "LOG" | "SESSIONS" | "SETTINGS" | "NOTES" | "EXAMS";
 
+/**
+ * Which spreadsheet (and Apps Script deployment) a tab lives in.
+ * STUDY = the original study spreadsheet (Code.gs); SECOND = a separate
+ * spreadsheet with its own script (Code.second.gs).
+ */
+export type SheetSource = "STUDY" | "SECOND";
+
+export const SHEET_SOURCE: Record<SheetKey, SheetSource> = {
+  BCS: "STUDY",
+  IT: "STUDY",
+  LOG: "STUDY",
+  SESSIONS: "STUDY",
+  SETTINGS: "STUDY",
+  NOTES: "STUDY",
+  EXAMS: "STUDY",
+};
+
 /** Google Sheet tab that backs each key. */
 export const SHEET_NAME: Record<SheetKey, string> = {
   BCS: "Sheet1",

@@ -11,13 +11,18 @@ const DEFAULT_ADMIN_URL =
 
 const sheetCsvUrl: string = import.meta.env.VITE_SHEET_CSV_URL || DEFAULT_SHEET_CSV_URL;
 
+/** Second, separate spreadsheet. No defaults: the feature stays off until configured. */
+const secondAdminUrl: string = (import.meta.env.VITE_SECOND_ADMIN_URL as string | undefined) || "";
+const secondSheetCsvUrl: string = (import.meta.env.VITE_SECOND_SHEET_CSV_URL as string | undefined) || "";
+
 /** Public CSV URL for a tab by name, derived from the main sheet URL. */
-function deriveTabCsvUrl(tab: string): string {
-  const match = sheetCsvUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+function deriveTabCsvUrl(tab: string, baseUrl: string = sheetCsvUrl): string {
+  if (!baseUrl) return "";
+  const match = baseUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
   if (match?.[1]) {
     return `https://docs.google.com/spreadsheets/d/${match[1]}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}&headers=1`;
   }
-  return sheetCsvUrl.replace(/gid=[^&]+/, `sheet=${encodeURIComponent(tab)}`);
+  return baseUrl.replace(/gid=[^&]+/, `sheet=${encodeURIComponent(tab)}`);
 }
 
 function deriveItCsvUrl(): string {
@@ -33,6 +38,10 @@ export const env = {
   notesSheetCsvUrl: deriveTabCsvUrl("My Drive"),
   examsSheetCsvUrl: deriveTabCsvUrl("Exams"),
   adminUrl: (import.meta.env.VITE_ADMIN_URL as string | undefined) || DEFAULT_ADMIN_URL,
+  secondAdminUrl,
+  secondSheetCsvUrl,
+  /** CSV URL for a tab of the second spreadsheet ("" when not configured). */
+  secondTabCsvUrl: (tab: string) => deriveTabCsvUrl(tab, secondSheetCsvUrl),
   authUsername: (import.meta.env.VITE_AUTH_USERNAME as string | undefined) || "admin",
   authPassword: (import.meta.env.VITE_AUTH_PASSWORD as string | undefined) || "password123",
   /** Optional ISO date (yyyy-mm-dd) used by the dashboard countdown. */

@@ -71,3 +71,19 @@ export default defineConfig([
   },
 ])
 ```
+
+## Second spreadsheet (separate Apps Script)
+
+Some features keep their data in a **separate** Google Spreadsheet, isolated from the study sheet. The app talks to it through its own Apps Script deployment.
+
+1. Create the spreadsheet → **Extensions → Apps Script** → paste everything in `Code.second.gs` → save.
+2. **Deploy → New deployment → Web app** — Execute as: *Me*, Who has access: *Anyone* → Deploy → copy the `/exec` URL.
+3. Add to `.env` **and** to Netlify → Site configuration → Environment variables:
+   ```
+   VITE_SECOND_ADMIN_URL=https://script.google.com/macros/s/…/exec
+   # optional, only used as a read fallback (share the sheet as "Anyone with the link can view"):
+   VITE_SECOND_SHEET_CSV_URL=https://docs.google.com/spreadsheets/d/<id>/export?format=csv&gid=0
+   ```
+4. Rebuild / redeploy (Vite bakes env vars in at build time).
+
+Until `VITE_SECOND_ADMIN_URL` is set, features on the second sheet show "not connected" and no request is made. Tabs are mapped to a spreadsheet in `SHEET_SOURCE` (`src/config/constants.ts`); the study sheet and its `Code.gs` are never affected.
