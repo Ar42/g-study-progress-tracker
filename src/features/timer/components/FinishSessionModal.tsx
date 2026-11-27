@@ -7,6 +7,10 @@ import { formatMinutes, parseDuration } from "../../../lib/duration";
 import { adjustSegments, closeSegments, elapsedMs, splitByLocalDay, truncateToMinutes } from "../../../lib/sessionTime";
 import { useSettings } from "../../targets/hooks/useSettings";
 import { useActiveSession } from "../hooks/useActiveSession";
+import { useTopicTarget } from "../../study/hooks/useTopicChoice";
+import { useStudyActions } from "../../study/hooks/useStudyActions";
+import { useUnitsDraft } from "../../study/hooks/useUnitsDraft";
+import { UnitsEditor } from "../../study/components/UnitsEditor";
 
 type LongChoice = "keep" | "correct" | null;
 
@@ -31,6 +35,14 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
   const [correction, setCorrection] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const target = useTopicTarget({
+    category: session?.category ?? "BCS",
+    subjectId: session?.subjectId ?? "",
+    topicId: session?.topicId ?? "",
+  });
+  const units = useUnitsDraft(target.row);
+  const bcsActions = useStudyActions("BCS");
+  const itActions = useStudyActions("IT");
 
   const closed = useMemo(() => (session ? closeSegments(session.segments, frozenAt) : []), [session, frozenAt]);
   const totalMin = elapsedMs(closed, frozenAt) / 60000;
@@ -69,9 +81,13 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
 
   const save = async () => {
     setSubmitted(true);
-    if (!description.trim() || !longChoice || (longChoice === "correct" && correctionError) || tooShort || shares.length === 0) return;
+    if (!description.trim() || !longChoice || (longChoice === "correct" && correctionError) || tooShort || shares.length === 0 || !units.valid) return;
     setBusy(true);
     const ok = await finish(finalSegments, description);
+    // Progress units are saved only after the session is safely logged.
+    if (ok && units.changed && target.row) {
+      await (session.category === "IT" ? itActions : bcsActions).update(units.withUnits(target.row), "Progress updated");
+    }
     setBusy(false);
     if (ok) onClose();
   };
@@ -234,6 +250,8 @@ export function FinishSessionModal({ onClose }: { readonly onClose: () => void }
               <Badge tone="neutral">{shares.length} entries</Badge> The same description is used for each day.
             </p>
           )}
+
+          <UnitsEditor units={units} showErrors={submitted} />
         </div>
       )}
     </Modal>

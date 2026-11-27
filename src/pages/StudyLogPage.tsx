@@ -126,6 +126,11 @@ export function StudyLogPage() {
 
   const onEdit = useCallback((e: LogEntry) => setEditor({ mode: "edit", entry: e }), []);
   const onDelete = useCallback((e: LogEntry) => setConfirmDelete(e), []);
+  // Same category / subject / chapter as the clicked entry.
+  const onStartTimer = useCallback(
+    (e: LogEntry) => startTimer({ category: e.category, subjectId: e.category === "BCS" ? e.subjectId : "", topicId: e.topicId }),
+    [startTimer],
+  );
 
   const openCreate = () => setEditor({ mode: "create" });
 
@@ -265,6 +270,7 @@ export function StudyLogPage() {
                     names={nameMap.get(e.id)!}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onStartTimer={onStartTimer}
                   />
                 ))}
               </div>

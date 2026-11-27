@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, Clock, Pencil, Trash2 } from "lucide-react";
+import { ChevronRight, Clock, Pencil, Play, Trash2 } from "lucide-react";
 import { Badge, IconButton, Markdown } from "../../../components/ui";
 import { cn } from "../../../lib/cn";
 import type { LogEntry } from "../../../types";
@@ -13,10 +13,12 @@ export interface LogEntryCardProps {
   readonly names: EntryNames & { exists: boolean; completed?: boolean };
   readonly onEdit: (entry: LogEntry) => void;
   readonly onDelete: (entry: LogEntry) => void;
+  /** Start the timer on the same category / subject / chapter. */
+  readonly onStartTimer: (entry: LogEntry) => void;
 }
 
 /** Memoised: re-renders only when its own entry/names change, not on every keystroke in search. */
-export const LogEntryCard = memo(function LogEntryCard({ entry, names, onEdit, onDelete }: LogEntryCardProps) {
+export const LogEntryCard = memo(function LogEntryCard({ entry, names, onEdit, onDelete, onStartTimer }: LogEntryCardProps) {
   const long = entry.description.length > LONG || entry.description.split("\n").length > 10;
   const [expanded, setExpanded] = useState(false);
   const href = entry.category === "IT" ? "/it" : `/subject/${encodeURIComponent(entry.subjectId)}`;
@@ -47,6 +49,15 @@ export const LogEntryCard = memo(function LogEntryCard({ entry, names, onEdit, o
           )}
         </div>
         <div className="flex shrink-0 items-center gap-0.5 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100 lg:focus-within:opacity-100">
+          {names.exists && (
+            <IconButton
+              label={`Start timer on ${names.topic}`}
+              icon={<Play />}
+              size="sm"
+              className="text-primary"
+              onClick={() => onStartTimer(entry)}
+            />
+          )}
           <IconButton label="Edit entry" icon={<Pencil />} size="sm" onClick={() => onEdit(entry)} />
           <IconButton label="Delete entry" icon={<Trash2 />} size="sm" tone="danger" onClick={() => onDelete(entry)} />
         </div>

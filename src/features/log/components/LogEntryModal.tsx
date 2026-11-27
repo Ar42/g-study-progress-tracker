@@ -9,6 +9,8 @@ import { TopicPicker } from "../../study/components/TopicPicker";
 import { useStudyActions } from "../../study/hooks/useStudyActions";
 import { useTopicTarget, validateTopicChoice, type TopicChoice, type TopicErrors } from "../../study/hooks/useTopicChoice";
 import { useLogActions } from "../hooks/useLog";
+import { useUnitsDraft } from "../../study/hooks/useUnitsDraft";
+import { UnitsEditor } from "../../study/components/UnitsEditor";
 
 export interface LogEditorState {
   readonly mode: "create" | "edit";
@@ -40,6 +42,7 @@ export function LogEntryModal({ state, onClose }: { readonly state: LogEditorSta
   const [markActive, setMarkActive] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const target = useTopicTarget(choice);
+  const units = useUnitsDraft(target.row);
 
   const validate = (): Errors => {
     const e: Errors = validateTopicChoice(choice);
@@ -59,7 +62,7 @@ export function LogEntryModal({ state, onClose }: { readonly state: LogEditorSta
 
   const submit = () => {
     setSubmitted(true);
-    if (Object.keys(validate()).length > 0) return;
+    if (Object.keys(validate()).length > 0 || !units.valid) return;
 
     const parsed = minutes.trim() ? parseDuration(minutes) : null;
     const entry: LogEntry = {
@@ -77,12 +80,16 @@ export function LogEntryModal({ state, onClose }: { readonly state: LogEditorSta
     };
 
     const mark = markActive && target.canMark ? target.row : null;
-    const setStatus = (choice.category === "IT" ? itActions : bcsActions).setStatus;
+    const actions = choice.category === "IT" ? itActions : bcsActions;
+    const topicRow = target.row;
+    const { changed: unitsChanged, withUnits } = units;
     onClose();
     void (async () => {
       const saved = await (state.mode === "create" ? log.create(entry) : log.update(entry));
-      // Only touch the topic's progress once the log entry is safely saved.
-      if (saved && mark) await setStatus(mark, ProgressStatus.IN_PROGRESS);
+      // Only touch the topic once the log entry is safely saved. Status + units go in ONE row write.
+      if (!saved || !topicRow) return;
+      if (mark) await actions.setStatus(withUnits(mark), ProgressStatus.IN_PROGRESS);
+      else if (unitsChanged) await actions.update(withUnits(topicRow), "Progress updated");
     })();
   };
 
@@ -153,6 +160,8 @@ export function LogEntryModal({ state, onClose }: { readonly state: LogEditorSta
         >
           <DurationInput id="log-min" value={minutes} onChange={setMinutes} invalid={Boolean(shownErrors.minutes)} />
         </Field>
+
+        <UnitsEditor units={units} showErrors={submitted} />
       </form>
     </Modal>
   );
