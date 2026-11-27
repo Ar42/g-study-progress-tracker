@@ -1,6 +1,6 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 import { EXAMS_SCRIPT_VERSION, NOTES_SCRIPT_VERSION, REQUIRED_SCRIPT_VERSION, SHEET_NAME, TIMER_SCRIPT_VERSION, WRITE_SETTLE_MS } from "../config/constants";
-import type { Exam, LinkItem, LogEntry, NoteItem, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
+import type { Exam, LinkItem, ProgressUnit, LogEntry, NoteItem, SessionSegment, StudyDomain, StudyRow, StudySession } from "../types";
 import { readTable, writeRow } from "./sheetClient";
 import { rowsFromTable, toPayload } from "./rowMapper";
 import { logEntriesFromTable, toLogPayload } from "./logMapper";
@@ -160,7 +160,7 @@ export const studyApi = createApi({
       onQueryStarted: async ({ domain, row }, { dispatch, queryFulfilled }) => {
         const patch = dispatch(
           studyApi.util.updateQueryData("getRows", domain, (draft) => {
-            draft.push(row as StudyRow & { links: LinkItem[] });
+            draft.push(row as StudyRow & { links: LinkItem[]; units: ProgressUnit[] });
           }),
         );
         queryFulfilled.catch(patch.undo);
@@ -180,7 +180,7 @@ export const studyApi = createApi({
         const patch = dispatch(
           studyApi.util.updateQueryData("getRows", domain, (draft) => {
             const i = draft.findIndex((r) => r.id === row.id);
-            if (i !== -1) draft[i] = row as StudyRow & { links: LinkItem[] };
+            if (i !== -1) draft[i] = row as StudyRow & { links: LinkItem[]; units: ProgressUnit[] };
           }),
         );
         queryFulfilled.catch(patch.undo);

@@ -17,6 +17,7 @@ import {
 import { useTopics } from "../features/study/hooks/useStudyData";
 import { useStudyActions } from "../features/study/hooks/useStudyActions";
 import { TopicList } from "../features/it/components/TopicList";
+import { StudyItemDetailsModal, type StudyItemDetailsTarget } from "../features/study/components/StudyItemDetailsModal";
 import { TopicEditor, type TopicEditorState } from "../features/it/components/TopicEditor";
 import { countByStatus, toStats } from "../lib/tree";
 import { STATUS_FILTER_OPTIONS, type StatusFilter } from "../enums/progress";
@@ -30,6 +31,7 @@ export function ITPage() {
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [query, setQuery] = useState("");
   const [editor, setEditor] = useState<TopicEditorState | null>(null);
+  const [viewing, setViewing] = useState<StudyItemDetailsTarget | null>(null);
   const startTimer = useStartTimer();
 
   const counts = useMemo(() => countByStatus(topics.map((t) => t.status)), [topics]);
@@ -128,6 +130,7 @@ export function ITPage() {
             topics={visible}
             numberOf={(id) => position.get(id) ?? 0}
             onEdit={(t) => setEditor({ mode: "edit", row: t.row })}
+            onView={(t) => setViewing({ row: t.row, status: t.status, context: "IT" })}
             onStatusChange={(t, s) => void setStatus(t.row, s)}
             onStartTimer={(t) => startTimer({ category: "IT", subjectId: "", topicId: t.row.id })}
             onSwap={isFiltering ? undefined : (a, b) => void swap(a, b)}
@@ -136,6 +139,11 @@ export function ITPage() {
       </Card>
 
       <TopicEditor state={editor} onClose={() => setEditor(null)} />
+      <StudyItemDetailsModal
+        target={viewing}
+        onClose={() => setViewing(null)}
+        onEdit={viewing ? () => setEditor({ mode: "edit", row: viewing.row }) : undefined}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { normalizeHeader } from "../lib/csv";
 import { normalizeSheetDate } from "../lib/date";
 import { parseStoredStatus } from "../lib/status";
-import type { LinkItem, StudyDomain, StudyRow } from "../types";
+import type { LinkItem, ProgressUnit, StudyDomain, StudyRow } from "../types";
 
 /** Sheet header (normalised) → field. Matches what Code.gs reads/writes. */
 const COLUMN_ALIASES = {
@@ -16,6 +16,7 @@ const COLUMN_ALIASES = {
   completedDate: ["completeddate"],
   links: ["links", "link"],
   isSubject: ["issubject"],
+  units: ["units", "progressunits"],
 } as const;
 
 type Column = keyof typeof COLUMN_ALIASES;
@@ -37,6 +38,31 @@ function parseLinks(raw: string): { links: LinkItem[]; linksRaw: string | null }
   } catch {
     // Keep unparseable content verbatim so a save never destroys it.
     return { links: [], linksRaw: trimmed };
+  }
+}
+
+const toCount = (v: unknown) => {
+  const n = Math.floor(Number(v));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
+
+function parseUnits(raw: string): { units: ProgressUnit[]; unitsRaw: string | null } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { units: [], unitsRaw: null };
+  try {
+    const parsed: unknown = JSON.parse(trimmed);
+    // Accept a single object as well as an array of them.
+    const list = Array.isArray(parsed) ? parsed : [parsed];
+    if (!list.every((u) => typeof u === "object" && u !== null)) return { units: [], unitsRaw: trimmed };
+    const units = (list as Record<string, unknown>[]).map((u) => ({
+      unit: String(u.unit ?? "").trim(),
+      total: toCount(u.total),
+      finished: toCount(u.finished),
+    }));
+    return { units, unitsRaw: null };
+  } catch {
+    // Keep unparseable content verbatim so a save never destroys it.
+    return { units: [], unitsRaw: trimmed };
   }
 }
 
@@ -73,6 +99,7 @@ export function rowsFromTable(table: readonly (readonly string[])[]): StudyRow[]
       completedDate: normalizeSheetDate(get("completedDate")),
       ...parseLinks(get("links")),
       isSubject: get("isSubject").toUpperCase() === "TRUE",
+      ...parseUnits(get("units")),
     });
   }
   return rows;
@@ -91,6 +118,7 @@ export function toPayload(row: StudyRow, domain: StudyDomain): Record<string, un
     targetToCompleteDate: row.targetDate,
     completedDate: row.completedDate,
     links: row.linksRaw ?? row.links,
+    units: row.unitsRaw ?? row.units,
   };
 
   if (domain === "IT") {
@@ -122,6 +150,8 @@ export function emptyRow(id: string, overrides: Partial<StudyRow> = {}): StudyRo
     links: [],
     linksRaw: null,
     isSubject: false,
+    units: [],
+    unitsRaw: null,
     ...overrides,
   };
 }

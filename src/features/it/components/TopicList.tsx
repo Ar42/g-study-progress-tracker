@@ -1,9 +1,9 @@
-import { GripVertical, Pencil, Play } from "lucide-react";
+import { Eye, GripVertical, Pencil, Play } from "lucide-react";
 import { cn } from "../../../lib/cn";
 import { IconButton } from "../../../components/ui";
 import type { StoredStatus } from "../../../enums/progress";
 import type { Topic } from "../../../types";
-import { ItemDetails } from "../../study/components/ItemDetails";
+import { UnitProgress } from "../../study/components/UnitProgress";
 import { StatusControl } from "../../study/components/StatusControl";
 import { StatusIcon, StatusTag } from "../../study/components/StatusVisual";
 import { statusNameClass, statusRowClass } from "../../study/statusStyles";
@@ -14,6 +14,8 @@ export interface TopicListProps {
   /** Position of each topic in the full (unfiltered) list, for stable numbering. */
   readonly numberOf: (id: string) => number;
   readonly onEdit: (topic: Topic) => void;
+  /** Open the read-only details popup. */
+  readonly onView: (topic: Topic) => void;
   /** Start the study timer on a topic. */
   readonly onStartTimer?: (topic: Topic) => void;
   readonly onStatusChange: (topic: Topic, status: StoredStatus) => void;
@@ -21,7 +23,7 @@ export interface TopicListProps {
   readonly onSwap?: (a: string, b: string) => void;
 }
 
-export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap, onStartTimer }: TopicListProps) {
+export function TopicList({ topics, numberOf, onEdit, onView, onStatusChange, onSwap, onStartTimer }: TopicListProps) {
   const dnd = useDragSwap((a, b) => onSwap?.(a, b));
   const draggable = Boolean(onSwap);
 
@@ -59,7 +61,7 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap, on
               <div className="min-w-0 flex-1 space-y-1.5">
                 <button
                   type="button"
-                  onClick={() => onEdit(t)}
+                  onClick={() => onView(t)}
                   className={cn(
                     "cursor-pointer text-left text-sm font-medium wrap-break-word hover:underline hover:decoration-fg-subtle hover:underline-offset-4",
                     statusNameClass(status),
@@ -70,7 +72,7 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap, on
                 <span className="ml-2 inline-flex align-middle">
                   <StatusTag status={status} />
                 </span>
-                <ItemDetails row={row} status={status} />
+                <UnitProgress units={row.units} compact />
               </div>
             </div>
             <div className="flex items-center justify-end gap-2">
@@ -84,6 +86,13 @@ export function TopicList({ topics, numberOf, onEdit, onStatusChange, onSwap, on
                   className="text-primary lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
                 />
               )}
+              <IconButton
+                label={`View ${row.name}`}
+                icon={<Eye />}
+                size="sm"
+                onClick={() => onView(t)}
+                className="lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+              />
               <IconButton
                 label={`Edit ${row.name}`}
                 icon={<Pencil />}

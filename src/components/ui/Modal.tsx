@@ -78,7 +78,7 @@ export function Modal({
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
-          "flex max-h-[92dvh] w-full flex-col overflow-hidden border border-border bg-surface shadow-pop outline-none animate-scale-in",
+          "flex max-h-[90dvh] w-full flex-col overflow-hidden border border-border bg-surface shadow-pop outline-none animate-scale-in",
           "rounded-t-2xl sm:rounded-2xl",
           SIZES[size],
         )}

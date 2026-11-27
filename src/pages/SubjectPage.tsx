@@ -18,6 +18,7 @@ import { statusSegments } from "../features/study/statusSegments";
 import { useSubjects } from "../features/study/hooks/useStudyData";
 import { useStudyActions } from "../features/study/hooks/useStudyActions";
 import { ChapterTree } from "../features/bcs/components/ChapterTree";
+import { StudyItemDetailsModal, type StudyItemDetailsTarget } from "../features/study/components/StudyItemDetailsModal";
 import { ChapterEditor, type EditorState } from "../features/bcs/components/ChapterEditor";
 import { QuickAddChaptersModal } from "../features/bcs/components/QuickAddChaptersModal";
 import { useStartTimer } from "../features/timer/hooks/useActiveSession";
@@ -38,6 +39,7 @@ export function SubjectPage() {
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [viewing, setViewing] = useState<StudyItemDetailsTarget | null>(null);
   const [quickAdd, setQuickAdd] = useState(false);
   const startTimer = useStartTimer();
 
@@ -176,6 +178,7 @@ export function SubjectPage() {
                 })
               }
               onEdit={(node) => setEditor({ mode: "edit", kind: "chapter", row: node.row })}
+              onView={(node) => setViewing({ row: node.row, status: node.status, context: subject.row.name })}
               onStatusChange={(node, status) => void setStatus(node.row, status)}
               onStartTimer={(node) => startTimer({ category: "BCS", subjectId: subject.row.id, topicId: node.row.id })}
               onMove={filter === "ALL" ? move : undefined}
@@ -185,6 +188,11 @@ export function SubjectPage() {
       </Card>
 
       <ChapterEditor subject={subject} state={editor} onClose={() => setEditor(null)} />
+      <StudyItemDetailsModal
+        target={viewing}
+        onClose={() => setViewing(null)}
+        onEdit={viewing ? () => setEditor({ mode: "edit", kind: "chapter", row: viewing.row }) : undefined}
+      />
       <QuickAddChaptersModal subject={subject} open={quickAdd} onClose={() => setQuickAdd(false)} />
     </div>
   );

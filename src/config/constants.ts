@@ -46,6 +46,9 @@ export const NOTES_SCRIPT_VERSION = 5;
 /** Code.gs v6: the "Exams" tab (exam tracker). */
 export const EXAMS_SCRIPT_VERSION = 6;
 
+/** Code.gs v7: "Units" column (partial progress) on the BCS and IT tabs. */
+export const UNITS_SCRIPT_VERSION = 7;
+
 /** Default: ask to confirm sessions longer than this when finishing (minutes). */
 export const DEFAULT_CONFIRM_OVER_MINUTES = 240;
 

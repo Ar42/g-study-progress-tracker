@@ -42,13 +42,18 @@
  * v6 (exam tracker):
  *  - New known tab "Exams", created with its header row on the first save.
  *    No existing tab is touched.
+ *
+ * v7 (partial progress):
+ *  - A "Units" column (JSON list of { unit, total, finished }) is APPENDED after
+ *    the last column of "Sheet1" (BCS) and "IT" on the next save, if missing.
+ *    No existing column or cell is moved, renamed or changed.
  */
 
-var SCRIPT_VERSION = 6;
+var SCRIPT_VERSION = 7;
 
 /** Tabs the script may create on first write, with their header rows. */
 var KNOWN_TABS = {
-  "IT": ["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links"],
+  "IT": ["Id", "Name", "Status", "Comments", "Started Date", "Target To Complete Date", "Completed Date", "Links", "Units"],
   "Study Log": ["Id", "Date", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Minutes", "Description", "Created At", "Session Id"],
   "Study Sessions": ["Id", "Category", "Subject Id", "Subject", "Topic Id", "Topic", "Status", "Segments", "Note", "Updated At"],
   "Settings": ["Id", "Value"],
@@ -58,6 +63,9 @@ var KNOWN_TABS = {
     "Exam Date", "Exam Time", "Exam Date Estimated", "Centre Name", "Centre Map", "Centre Notes",
     "Credentials", "Description", "Hide On Dashboard", "Created At", "Updated At"]
 };
+
+/** Columns appended (if missing) to existing tabs that aren't in KNOWN_TABS. */
+var EXTRA_COLUMNS = { "Sheet1": ["Units"] };
 
 /** Earlier names of known tabs, renamed in place on first use (data moves with the tab). */
 var LEGACY_TAB_NAMES = { "My Drive": "Notes" };
@@ -108,7 +116,7 @@ function resolveSheet(name, createIfKnown) {
 
 /** Appends any KNOWN_TABS header missing from row 1 of a known tab (never reorders). */
 function ensureColumns(sheet, name) {
-  var wanted = KNOWN_TABS[name];
+  var wanted = KNOWN_TABS[name] || EXTRA_COLUMNS[name];
   if (!wanted) return;
   var lastCol = sheet.getLastColumn();
   var present = {};

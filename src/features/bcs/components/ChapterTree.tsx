@@ -1,10 +1,10 @@
 import { useState, type DragEvent } from "react";
-import { ChevronRight, GripVertical, Pencil, Play } from "lucide-react";
+import { ChevronRight, Eye, GripVertical, Pencil, Play } from "lucide-react";
 import { cn } from "../../../lib/cn";
 import { Badge, IconButton, ProgressBar } from "../../../components/ui";
 import type { StoredStatus } from "../../../enums/progress";
 import type { TreeNode } from "../../../types";
-import { ItemDetails } from "../../study/components/ItemDetails";
+import { UnitProgress } from "../../study/components/UnitProgress";
 import { StatusControl } from "../../study/components/StatusControl";
 import { StatusIcon, StatusTag } from "../../study/components/StatusVisual";
 import { statusNameClass, statusRowClass } from "../../study/statusStyles";
@@ -13,6 +13,8 @@ import { collectLeaves, countByStatus } from "../../../lib/tree";
 export interface ChapterTreeProps {
   readonly nodes: readonly TreeNode[];
   readonly onEdit: (node: TreeNode) => void;
+  /** Open the read-only details popup (chapters/topics). */
+  readonly onView: (node: TreeNode) => void;
   /** Start the study timer on a chapter. */
   readonly onStartTimer?: (node: TreeNode) => void;
   readonly onStatusChange: (node: TreeNode, status: StoredStatus) => void;
@@ -59,7 +61,7 @@ interface RowProps extends ChapterTreeProps {
 }
 
 function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
-  const { onEdit, onStatusChange, onMove, onStartTimer, collapsed, onToggle } = tree;
+  const { onEdit, onView, onStatusChange, onMove, onStartTimer, collapsed, onToggle } = tree;
   const { row, isLeaf, stats, status } = node;
   const open = !collapsed.has(row.id);
   const inside = isLeaf ? null : countByStatus(collectLeaves(node.children).map((l) => l.status));
@@ -141,7 +143,7 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
               <div className="min-w-0 flex-1">
                 <button
                   type="button"
-                  onClick={() => onEdit(node)}
+                  onClick={() => (isLeaf ? onView(node) : onEdit(node))}
                   className={cn(
                     "cursor-pointer text-left text-sm wrap-break-word hover:underline hover:decoration-fg-subtle hover:underline-offset-4",
                     isLeaf ? statusNameClass(status) : "font-semibold text-fg",
@@ -169,7 +171,7 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
                 </span>
               </div>
             </div>
-            <ItemDetails row={row} status={status} />
+            {isLeaf && <UnitProgress units={row.units} compact />}
           </div>
         </div>
 
@@ -193,6 +195,13 @@ function ChapterRow({ node, depth, index, dnd, ...tree }: RowProps) {
               className="text-primary lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
             />
           )}
+          <IconButton
+            label={`View ${row.name}`}
+            icon={<Eye />}
+            size="sm"
+            onClick={() => onView(node)}
+            className="lg:opacity-0 lg:group-hover:opacity-100 lg:focus-visible:opacity-100"
+          />
           <IconButton
             label={`Edit ${row.name}`}
             icon={<Pencil />}

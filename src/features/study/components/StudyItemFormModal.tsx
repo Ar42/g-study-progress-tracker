@@ -2,11 +2,13 @@ import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link2, Plus, Trash2 } from "lucide-react";
+import { BarChart3, Link2, Plus, Trash2 } from "lucide-react";
 import { Button, DateInput, Field, IconButton, Input, Modal, Select, Textarea } from "../../../components/ui";
 import { ProgressStatus, STATUS_META, STORED_STATUSES, type StoredStatus } from "../../../enums/progress";
 import { todayISO } from "../../../lib/date";
 import type { StudyRow } from "../../../types";
+import { UNITS_SCRIPT_VERSION } from "../../../config/constants";
+import { useSyncStatus } from "../../../services/syncStatus";
 
 export type ItemKind = "subject" | "chapter" | "topic";
 
@@ -26,6 +28,18 @@ const linkSchema = z
     }
   });
 
+const count = z.string().trim().regex(/^\d*$/, "Whole number");
+
+const unitSchema = z
+  .object({ unit: z.string().trim(), total: count, finished: count })
+  .superRefine((u, ctx) => {
+    if (!u.total) ctx.addIssue({ code: "custom", path: ["total"], message: "Enter the total" });
+    else if (Number(u.total) < 1) ctx.addIssue({ code: "custom", path: ["total"], message: "At least 1" });
+    if (u.total && u.finished && Number(u.finished) > Number(u.total)) {
+      ctx.addIssue({ code: "custom", path: ["finished"], message: "More than the total" });
+    }
+  });
+
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   status: z.enum(STORED_STATUSES as [StoredStatus, ...StoredStatus[]]),
@@ -39,6 +53,7 @@ const schema = z.object({
   completedDate: z.string(),
   comments: z.string(),
   links: z.array(linkSchema),
+  units: z.array(unitSchema),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -56,6 +71,7 @@ function toFormValues(row: StudyRow): FormValues {
     completedDate: row.completedDate,
     comments: row.comments,
     links: row.links.map((l) => ({ ...l })),
+    units: row.units.map((u) => ({ unit: u.unit, total: String(u.total || ""), finished: String(u.finished || "") })),
   };
 }
 
@@ -95,6 +111,9 @@ export function StudyItemFormModal({
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toFormValues(initial) });
 
   const { fields, append, remove } = useFieldArray({ control, name: "links" });
+  const unitFields = useFieldArray({ control, name: "units" });
+  const scriptVersion = useSyncStatus((s) => s.scriptVersion);
+  const unitsWritable = (scriptVersion ?? 0) >= UNITS_SCRIPT_VERSION;
 
   useEffect(() => {
     if (open) reset(toFormValues(initial));
@@ -103,9 +122,12 @@ export function StudyItemFormModal({
   const showStatus = kind !== "subject";
   const showMarks = kind !== "topic";
   const showDates = kind !== "subject";
+  const showUnits = kind !== "subject";
 
   const submit = handleSubmit((v) => {
     const linksChanged = JSON.stringify(v.links) !== JSON.stringify(initial.links);
+    const units = v.units.map((u) => ({ unit: u.unit, total: Number(u.total) || 0, finished: Number(u.finished) || 0 }));
+    const unitsChanged = JSON.stringify(units) !== JSON.stringify(initial.units);
     onSubmit({
       ...initial,
       name: v.name,
@@ -119,6 +141,9 @@ export function StudyItemFormModal({
       links: v.links.filter((l) => l.link),
       // Only drop an unparseable legacy links cell if the user actually edited links.
       linksRaw: linksChanged ? null : initial.linksRaw,
+      units: showUnits ? units : initial.units,
+      // Same for an unparseable units cell.
+      unitsRaw: showUnits && unitsChanged ? null : initial.unitsRaw,
     });
   });
 
@@ -237,6 +262,58 @@ export function StudyItemFormModal({
                 <DateInput id="f-completed" {...register("completedDate")} />
               </Field>
             </div>
+          </section>
+        )}
+
+        {showUnits && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">Progress units</h3>
+                <p className="text-xs text-fg-subtle">Track partial progress, e.g. videos 12 of 30. Doesn't change completion stats.</p>
+              </div>
+              <Button
+                size="sm"
+                variant="soft"
+                icon={<Plus className="size-3.5" />}
+                disabled={!unitsWritable}
+                onClick={() => unitFields.append({ unit: unitFields.fields.length === 0 ? "video" : "", total: "", finished: "" })}
+              >
+                Add unit
+              </Button>
+            </div>
+
+            {!unitsWritable ? (
+              <p className="rounded-lg border border-warning/30 bg-warning-soft px-3 py-2.5 text-xs text-fg-muted">
+                Progress units need the latest Code.gs (v7). Paste it into Apps Script and deploy a new version to use them.
+              </p>
+            ) : unitFields.fields.length === 0 ? (
+              <p className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-3 text-xs text-fg-subtle">
+                <BarChart3 className="size-3.5" /> No units yet.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {unitFields.fields.map((f, i) => {
+                  const e = errors.units?.[i];
+                  return (
+                    <li key={f.id} className="flex items-start gap-2 rounded-lg border border-border bg-surface-2/50 p-3">
+                      <div className="grid flex-1 grid-cols-3 gap-2">
+                        <Input placeholder="Unit (video)" aria-label="Unit" {...register(`units.${i}.unit`)} />
+                        <div>
+                          <Input placeholder="Finished" aria-label="Finished" inputMode="numeric" aria-invalid={Boolean(e?.finished)} {...register(`units.${i}.finished`)} />
+                          {e?.finished && <p className="mt-1 text-xs text-danger">{e.finished.message}</p>}
+                        </div>
+                        <div>
+                          <Input placeholder="Total" aria-label="Total" inputMode="numeric" aria-invalid={Boolean(e?.total)} {...register(`units.${i}.total`)} />
+                          {e?.total && <p className="mt-1 text-xs text-danger">{e.total.message}</p>}
+                        </div>
+                      </div>
+                      <IconButton label="Remove unit" tone="danger" icon={<Trash2 />} onClick={() => unitFields.remove(i)} />
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </section>
         )}
 

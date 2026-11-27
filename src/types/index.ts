@@ -2,6 +2,16 @@ import type { DisplayStatus, StoredStatus } from "../enums/progress";
 
 export type StudyDomain = "BCS" | "IT";
 
+/**
+ * Partial progress inside one chapter/topic, e.g. { unit: "video", total: 30, finished: 12 }.
+ * Tracking only: it never changes completion stats (a topic counts once, when completed).
+ */
+export interface ProgressUnit {
+  readonly unit: string;
+  readonly total: number;
+  readonly finished: number;
+}
+
 export interface LinkItem {
   readonly title: string;
   readonly link: string;
@@ -32,6 +42,10 @@ export interface StudyRow {
   readonly linksRaw: string | null;
   /** BCS only: TRUE marks a top-level subject. */
   readonly isSubject: boolean;
+  /** Partial progress counters (may be empty). */
+  readonly units: readonly ProgressUnit[];
+  /** Set when the sheet's units cell is not valid JSON; preserved on write. */
+  readonly unitsRaw: string | null;
 }
 
 export interface ProgressStats {
